@@ -79,3 +79,55 @@ export function createCartFromSelection(input: CreateCartInput): Cart {
 export function getCart(cartId: string): Cart | null {
   return cartStore.get(cartId) ?? null;
 }
+
+// --- Step 2: addItemsToCart ---
+
+/** Input to addItemsToCart */
+export interface AddItemsInput {
+  cartId: string;
+  itemIds: string[];
+  subtotal?: number;
+}
+
+/**
+ * Adds items from a ranked outfit to an existing cart.
+ * - If item already in cart, increments quantity.
+ * - Recomputes totals (adds subtotal to existing).
+ * - Returns null if cart not found.
+ */
+export function addItemsToCart(input: AddItemsInput): Cart | null {
+  const { cartId, itemIds, subtotal = 0 } = input;
+  const cart = cartStore.get(cartId);
+  if (!cart) return null;
+
+  const lineItemsMap = new Map<string, number>();
+  for (const li of cart.lineItems) {
+    lineItemsMap.set(li.itemId, li.quantity);
+  }
+  for (const itemId of itemIds) {
+    const qty = lineItemsMap.get(itemId) ?? 0;
+    lineItemsMap.set(itemId, qty + 1);
+  }
+
+  cart.lineItems = Array.from(lineItemsMap.entries()).map(([itemId, quantity]) => ({
+    itemId,
+    quantity,
+  }));
+
+  const currency = cart.totals?.currency ?? "USD";
+  const oldSubtotal = cart.totals?.subtotal ?? 0;
+  const newSubtotal = oldSubtotal + subtotal;
+  const tax = 0;
+  const shipping = 0;
+  const total = newSubtotal + tax + shipping;
+
+  cart.totals = {
+    currency,
+    subtotal: newSubtotal,
+    tax,
+    shipping,
+    total,
+  };
+
+  return cart;
+}
