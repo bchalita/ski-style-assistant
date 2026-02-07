@@ -169,7 +169,8 @@ const filterByMustHaves = (
   for (const [category, items] of Object.entries(grouped)) {
     filtered[category] = items.filter((item) => {
       const attrs = item.attributes ?? {};
-      const tags = Array.isArray(attrs.featureTags) ? attrs.featureTags : [];
+      const rawTags = attrs.featureTags;
+      const tags = Array.isArray(rawTags) ? rawTags.map(String) : [];
       return mustHaves.every((must) => attrs[must] === true || tags.includes(must));
     });
   }
