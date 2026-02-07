@@ -1,0 +1,29 @@
+.DS_Store
+
+# Jupyter / Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Env files (keep examples)
+.env
+.env.*
+!.env.example
+
+# Next.js app lives in /web
+/web/node_modules/
+/web/.next/
+/web/out/
+/web/build/
+/web/coverage/
+/web/.vercel/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+.node_modules/
+web/.next/
+
