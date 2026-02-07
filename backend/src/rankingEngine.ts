@@ -214,7 +214,17 @@ export async function rankOutfits(input: RankOutfitsInput): Promise<RankingResul
 
   scored.sort((a, b) => b.score - a.score);
 
-  const top3 = scored.slice(0, 3);
+  const topScore = scored[0]?.score;
+  const topTier = scored.filter((s) => s.score === topScore);
+  const rest = scored.filter((s) => s.score !== topScore);
+  if (topTier.length > 1) {
+    const randomIndex = Math.floor(Math.random() * topTier.length);
+    const [chosen] = topTier.splice(randomIndex, 1);
+    topTier.unshift(chosen);
+  }
+  const ordered = [...topTier, ...rest];
+
+  const top3 = ordered.slice(0, 3);
 
   const ranked: RankedOutfit[] = await Promise.all(
     top3.map(async ({ outfit, score }) => {
