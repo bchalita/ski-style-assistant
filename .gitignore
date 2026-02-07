@@ -10,13 +10,13 @@ __pycache__/
 .env.*
 !.env.example
 
-# Next.js app lives in /web
-/web/node_modules/
-/web/.next/
-/web/out/
-/web/build/
-/web/coverage/
-/web/.vercel/
+# Frontend (Next.js) lives in /frontend
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/frontend/build/
+/frontend/coverage/
+/frontend/.vercel/
 
 # Logs
 npm-debug.log*
@@ -24,6 +24,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Backend (Node)
+/backend/node_modules/
+/backend/dist/
+
 .node_modules/
-web/.next/
 
