@@ -1,30 +1,34 @@
 # MBAn_Underdogs
 
-Simple full-stack web app (Next.js + Supabase Auth) lives in `web/`.
+Full-stack starter with **frontend/backend separated**:
+
+- `frontend/`: Next.js (default `create-next-app` scaffold)
+- `backend/`: Node/Express API (TypeScript)
 
 ## How to run (local)
 
-1. Create a Supabase project and enable **Email/Password** auth.
-2. In Supabase **Project Settings → API**, copy:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. Setup + install:
+Setup + install:
 
 ```bash
 chmod +x ./scripts/dev_setup.sh
 ./scripts/dev_setup.sh
 ```
 
-4. Put your Supabase values into `web/.env.local`, then start:
+Start backend (port 4000 by default):
 
 ```bash
-cd web
+cd backend
+npm run dev
+```
+
+Start frontend (port 3000 by default):
+
+```bash
+cd frontend
 npm run dev
 ```
 
 Open `http://localhost:3000`.
-
-More details: `web/README.md`.
 
 ## Lovable mirror workflow
 
