@@ -42,8 +42,10 @@ export default function CheckoutPage() {
         <button onClick={goBackToResults} className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <ShoppingBag className="w-6 h-6 text-primary" />
-        <h1 className="text-lg font-bold text-foreground">Checkout</h1>
+        <button onClick={goHome} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <ShoppingBag className="w-6 h-6 text-primary" />
+          <h1 className="text-lg font-bold text-foreground">Checkout</h1>
+        </button>
       </header>
 
       <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">

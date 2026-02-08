@@ -63,19 +63,17 @@ export default function ItemCard({ product, category }: Props) {
         </div>
 
         {/* Color swatches */}
-        {colorVariants.length > 0 && (
-          <div className="px-4 pb-1 flex items-center gap-2 flex-wrap">
-            <ColorSwatch color={product.color} isActive onClick={() => {}} />
-            {colorVariants.map((v) => (
-              <ColorSwatch
-                key={v.id}
-                color={v.color}
-                isActive={false}
-                onClick={() => swapItem(category, v)}
-              />
-            ))}
-          </div>
-        )}
+        <div className="px-4 pb-1 flex items-center gap-2 flex-wrap">
+          <ColorSwatch color={product.color} isActive onClick={() => {}} />
+          {colorVariants.map((v) => (
+            <ColorSwatch
+              key={v.id}
+              color={v.color}
+              isActive={false}
+              onClick={() => swapItem(category, v)}
+            />
+          ))}
+        </div>
 
         {/* Info */}
         <div className="px-4 pb-2">
