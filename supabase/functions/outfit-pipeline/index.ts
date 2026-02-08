@@ -1,4 +1,4 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// @ts-nocheck xhr polyfill removed - native fetch available in Deno
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -448,7 +448,8 @@ function searchAgent(input: { budget?: { currency: string; max: number }; deadli
 }
 
 // ===== ASSEMBLING OUTFITS =====
-const REQUIRED_CATEGORIES = ["jacket", "pants", "boots", "gloves", "baselayer", "base_bottom"];
+const REQUIRED_CATEGORIES = ["jacket", "pants", "boots", "gloves", "baselayer"];
+const OPTIONAL_CATEGORIES = ["base_bottom"];
 
 function assembleOutfits(items: SearchItem[], budget?: { currency: string; max: number }): { outfitOptions: OutfitOption[]; infeasibleReason?: string } {
   if (items.length === 0) return { outfitOptions: [], infeasibleReason: "No items found" };
@@ -459,17 +460,25 @@ function assembleOutfits(items: SearchItem[], budget?: { currency: string; max: 
   const missing = REQUIRED_CATEGORIES.find(c => !grouped[c]?.length);
   if (missing) return { outfitOptions: [], infeasibleReason: `Missing category: ${missing}` };
 
+  // Build combo categories: required + any optional that have items
+  const comboCategories = [...REQUIRED_CATEGORIES];
+  for (const cat of OPTIONAL_CATEGORIES) {
+    if (grouped[cat]?.length) comboCategories.push(cat);
+  }
+
   const topK: Record<string, SearchItem[]> = {};
-  for (const cat of REQUIRED_CATEGORIES) {
-    topK[cat] = (grouped[cat] ?? []).slice(0, 3);
+  for (const cat of comboCategories) {
+    // Sort by price to ensure budget-friendly options are included, then take top 5
+    const sorted = (grouped[cat] ?? []).sort((a, b) => a.price - b.price);
+    topK[cat] = sorted.slice(0, 5);
   }
 
   const combos: SearchItem[][] = [];
   const MAX = 100;
   const bt = (idx: number, curr: SearchItem[]) => {
     if (combos.length >= MAX) return;
-    if (idx === REQUIRED_CATEGORIES.length) { combos.push([...curr]); return; }
-    for (const item of topK[REQUIRED_CATEGORIES[idx]]) { curr.push(item); bt(idx + 1, curr); curr.pop(); if (combos.length >= MAX) return; }
+    if (idx === comboCategories.length) { combos.push([...curr]); return; }
+    for (const item of topK[comboCategories[idx]]) { curr.push(item); bt(idx + 1, curr); curr.pop(); if (combos.length >= MAX) return; }
   };
   bt(0, []);
 
