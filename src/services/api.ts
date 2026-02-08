@@ -1,7 +1,34 @@
 import type { BackendItem } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 
 export type { BackendItem };
+
+// Helper to get Supabase functions URL and key
+function getSupabaseConfig() {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) {
+    throw new Error("Backend not configured. Please refresh the page.");
+  }
+  return { url, key };
+}
+
+async function invokeEdgeFunction(functionName: string, body: unknown) {
+  const { url, key } = getSupabaseConfig();
+  const res = await fetch(`${url}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": key,
+      "Authorization": `Bearer ${key}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${functionName} failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}
 
 // --- Request Agent ---
 
@@ -30,11 +57,7 @@ export async function callRequestAgent(
     previousOutput?: RequestAgentOutput;
   }
 ): Promise<RequestAgentOutput> {
-  const { data, error } = await supabase.functions.invoke("request-agent", {
-    body: { userRequest, context },
-  });
-  if (error) throw new Error(error.message || "Request agent failed");
-  return data;
+  return invokeEdgeFunction("request-agent", { userRequest, context });
 }
 
 // --- Outfit Pipeline ---
@@ -64,11 +87,7 @@ export async function callOutfitPipeline(
   normalizedRequest: RequestAgentOutput,
   userPrompt?: string
 ): Promise<OutfitPipelineResult> {
-  const { data, error } = await supabase.functions.invoke("outfit-pipeline", {
-    body: { normalizedRequest, userPrompt },
-  });
-  if (error) throw new Error(error.message || "Outfit pipeline failed");
-  return data;
+  return invokeEdgeFunction("outfit-pipeline", { normalizedRequest, userPrompt });
 }
 
 // --- Cart (kept for future use) ---
