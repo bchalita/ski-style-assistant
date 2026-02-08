@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useApp } from "@/context/AppContext";
 import { Product, ProductCategory } from "@/types";
 import { Check, ChevronDown } from "lucide-react";
 import SwapModal from "./SwapModal";
+import ColorSwatch from "./ColorSwatch";
 
 interface Props {
   product: Product;
@@ -10,9 +11,27 @@ interface Props {
 }
 
 export default function ItemCard({ product, category }: Props) {
-  const { confirmedItems, toggleConfirmItem } = useApp();
+  const { confirmedItems, toggleConfirmItem, getAlternatives, swapItem } = useApp();
   const [showAlternatives, setShowAlternatives] = useState(false);
   const isConfirmed = confirmedItems.has(category);
+
+  // Get color variants of the same product name
+  const colorVariants = useMemo(() => {
+    const alts = getAlternatives(category);
+    const sameName = alts.filter(
+      (a) => a.name === product.name && a.size === product.size && a.color !== product.color
+    );
+    // Deduplicate by color
+    const seen = new Set<string>([product.color]);
+    const unique: Product[] = [];
+    for (const a of sameName) {
+      if (!seen.has(a.color)) {
+        seen.add(a.color);
+        unique.push(a);
+      }
+    }
+    return unique;
+  }, [getAlternatives, category, product]);
 
   return (
     <>
@@ -42,6 +61,21 @@ export default function ItemCard({ product, category }: Props) {
             />
           </div>
         </div>
+
+        {/* Color swatches */}
+        {colorVariants.length > 0 && (
+          <div className="px-4 pb-1 flex items-center gap-2 flex-wrap">
+            <ColorSwatch color={product.color} isActive onClick={() => {}} />
+            {colorVariants.map((v) => (
+              <ColorSwatch
+                key={v.id}
+                color={v.color}
+                isActive={false}
+                onClick={() => swapItem(category, v)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Info */}
         <div className="px-4 pb-2">
