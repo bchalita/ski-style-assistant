@@ -224,7 +224,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConversationHistory([]);
   }, []);
 
-  const totalPrice = Object.values(outfit).reduce((sum, p) => sum + p.price, 0);
+  const totalPrice = Object.entries(outfit).reduce((sum, [cat, p]) => confirmedItems.has(cat as ProductCategory) ? sum + p.price : sum, 0);
 
   return (
     <AppContext.Provider
