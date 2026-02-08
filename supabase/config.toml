@@ -1,1 +1,7 @@
 project_id = "iqbsjfvmutibnnxvvxyi"
+
+[functions.request-agent]
+verify_jwt = false
+
+[functions.outfit-pipeline]
+verify_jwt = false

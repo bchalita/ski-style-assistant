@@ -1,21 +1,7 @@
 import type { BackendItem } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export type { BackendItem };
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-
-async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `API error ${res.status}`);
-  }
-  return res.json();
-}
 
 // --- Request Agent ---
 
@@ -37,15 +23,21 @@ export interface RequestAgentOutput {
   clarifyingQuestion: string | null;
 }
 
-export function callRequestAgent(
+export async function callRequestAgent(
   userRequest: string,
   context?: {
     previousMessages?: string[];
     previousOutput?: RequestAgentOutput;
   }
 ): Promise<RequestAgentOutput> {
-  return post("/api/request-agent", { userRequest, context });
+  const { data, error } = await supabase.functions.invoke("request-agent", {
+    body: { userRequest, context },
+  });
+  if (error) throw new Error(error.message || "Request agent failed");
+  return data;
 }
+
+// --- Outfit Pipeline ---
 
 export interface OutfitOptionBackend {
   id: string;
@@ -68,14 +60,18 @@ export interface OutfitPipelineResult {
   infeasibleReason?: string;
 }
 
-export function callOutfitPipeline(
+export async function callOutfitPipeline(
   normalizedRequest: RequestAgentOutput,
   userPrompt?: string
 ): Promise<OutfitPipelineResult> {
-  return post("/api/outfits", { normalizedRequest, userPrompt });
+  const { data, error } = await supabase.functions.invoke("outfit-pipeline", {
+    body: { normalizedRequest, userPrompt },
+  });
+  if (error) throw new Error(error.message || "Outfit pipeline failed");
+  return data;
 }
 
-// --- Cart ---
+// --- Cart (kept for future use) ---
 
 export interface CartResult {
   cartId: string;
@@ -89,12 +85,13 @@ export interface CartResult {
   };
 }
 
-export function callCreateCart(selection: {
+export async function callCreateCart(selection: {
   outfitId?: string;
   itemIds: string[];
   subtotal?: number;
 }): Promise<CartResult> {
-  return post("/api/cart", { selection });
+  // Will be moved to edge function later
+  throw new Error("Cart not yet implemented as edge function");
 }
 
 // --- Checkout ---
@@ -106,7 +103,7 @@ export interface CheckoutResult {
   message?: string;
 }
 
-export function callCheckout(data: {
+export async function callCheckout(data: {
   cartId: string;
   payment: { provider: string; token: string };
   shipping: {
@@ -119,5 +116,6 @@ export function callCheckout(data: {
   };
   contact?: { email?: string; phone?: string };
 }): Promise<CheckoutResult> {
-  return post("/api/checkout", data);
+  // Will be moved to edge function later
+  throw new Error("Checkout not yet implemented as edge function");
 }
