@@ -2,24 +2,17 @@ import type { BackendItem } from "@/types";
 
 export type { BackendItem };
 
-// Helper to get Supabase functions URL and key
-function getSupabaseConfig() {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) {
-    throw new Error("Backend not configured. Please refresh the page.");
-  }
-  return { url, key };
-}
+// Supabase config - these are publishable (public) keys, safe to store in code
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://iqbsjfvmutibnnxvvxyi.supabase.co";
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxYnNqZnZtdXRpYm5ueHZ2eHlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0OTg3OTIsImV4cCI6MjA4NjA3NDc5Mn0.Lir5Bjs4SnvpVXqhvIqXPNH9MX6eqYnxqpaisJIgfDc";
 
 async function invokeEdgeFunction(functionName: string, body: unknown) {
-  const { url, key } = getSupabaseConfig();
-  const res = await fetch(`${url}/functions/v1/${functionName}`, {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${functionName}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "apikey": key,
-      "Authorization": `Bearer ${key}`,
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
     },
     body: JSON.stringify(body),
   });
