@@ -3,7 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { ShoppingBag, ArrowLeft, Check, Home, Truck } from "lucide-react";
 import { ProductCategory } from "@/types";
 
-const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "boots"];
+const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "boots", "base_bottom"];
 
 export default function CheckoutPage() {
   const { outfit, confirmedItems, totalPrice, goBackToResults, goHome } = useApp();
