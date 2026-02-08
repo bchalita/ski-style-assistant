@@ -43,7 +43,7 @@ const INITIAL_MESSAGE: ChatMessage = {
   id: "1",
   role: "assistant",
   text: "Hey there! I'm BuyBuddy, your personal shopping assistant. What can I help you find today?",
-  quickReplies: ["Full ski outfit", "Just a jacket", "Gloves & accessories"],
+  quickReplies: ["Help organizing a superbowl watch party", "What could be the perfect gift for my nephew?", "That Italian dish you didn't know you needed"],
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
