@@ -24,7 +24,7 @@ export interface Item {
   currency: string;
   shop: string;
   url?: string;
-  attributes?: Record<string, string | number | boolean>;
+  attributes?: Record<string, string | number | boolean | string[]>;
 }
 
 /** A single outfit option produced by assemblingOutfit.ts */

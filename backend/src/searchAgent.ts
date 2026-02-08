@@ -4,13 +4,18 @@
  * - Communicates with: requestAgent.ts (receives normalized request / may ask for missing info), fakeDatabase.ts (requests items; simulates API requests for >= 3 shops), assemblingOutfit.ts (passes items forward)
  */
 
+import { realDatabase } from "./RealDatabase";
+import { fakeDatabase } from "./fakeDatabase";
+
 export type SearchInput = {
   budget?: { currency: string; max: number };
   deadline?: string;
-  preferences?: Record<string, string | number | boolean>;
+  preferences?: Record<string, string | number | boolean | string[]>;
   mustHaves?: string[];
   niceToHaves?: string[];
 };
+
+export type AttributeValue = string | number | boolean | string[];
 
 export type SearchItem = {
   id: string;
@@ -20,7 +25,7 @@ export type SearchItem = {
   currency: string;
   shop: string;
   url?: string;
-  attributes?: Record<string, string | number | boolean>;
+  attributes?: Record<string, AttributeValue>;
 };
 
 export type SearchOutput = {
@@ -32,7 +37,7 @@ export type SearchOutput = {
     currency: string;
     shop: string;
     url?: string;
-    attributes?: Record<string, string | number | boolean>;
+    attributes?: Record<string, AttributeValue>;
   }>;
   missingInfo?: string[];
   queryMeta?: { requestedShops: string[]; attemptedRequests: number };
@@ -44,507 +49,13 @@ type ShopQuery = {
   categories: string[];
   budget?: { currency: string; max: number };
   deadline?: string;
-  preferences: Record<string, string | number | boolean>;
+  preferences: Record<string, string | number | boolean | string[]>;
   mustHaves: string[];
   niceToHaves: string[];
 };
 
 const BASE_DATE = "2026-02-01";
 const SHOPS: ShopId[] = ["alpineMart", "snowBase", "peakShop"];
-
-export const CATALOG: Record<ShopId, SearchItem[]> = {
-  alpineMart: [
-    {
-      id: "am-jacket-1",
-      title: "Aurora Shell Jacket",
-      category: "jacket",
-      price: 289,
-      currency: "USD",
-      shop: "alpineMart",
-      url: "https://example.com/am/aurora-shell-jacket",
-      attributes: {
-        color: "black",
-        brand: "NorthPeak",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 5,
-        waterproof: true,
-      },
-    },
-    {
-      id: "am-jacket-2",
-      title: "Summit Insulated Jacket",
-      category: "jacket",
-      price: 319,
-      currency: "USD",
-      shop: "alpineMart",
-      url: "https://example.com/am/summit-insulated-jacket",
-      attributes: {
-        color: "blue",
-        brand: "GlacierWool",
-        sizes: ["m", "l", "xl"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 6,
-        waterproof: false,
-      },
-    },
-    {
-      id: "am-pants-1",
-      title: "RidgeLine Pants",
-      category: "pants",
-      price: 199,
-      currency: "USD",
-      shop: "alpineMart",
-      url: "https://example.com/am/ridgeline-pants",
-      attributes: {
-        color: "black",
-        brand: "NorthPeak",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 4,
-        waterproof: true,
-      },
-    },
-    {
-      id: "am-pants-2",
-      title: "GlacierEdge Pants",
-      category: "pants",
-      price: 219,
-      currency: "USD",
-      shop: "alpineMart",
-      url: "https://example.com/am/glacieredge-pants",
-      attributes: {
-        color: "white",
-        brand: "IceForge",
-        sizes: ["m", "l"],
-        deliveryDaysMin: 4,
-        deliveryDaysMax: 7,
-        waterproof: true,
-      },
-    },
-    {
-      id: "am-boots-1",
-      title: "FrostGrip Boots",
-      category: "boots",
-      price: 249,
-      currency: "USD",
-      shop: "alpineMart",
-      attributes: {
-        color: "black",
-        brand: "RidgeWorks",
-        sizes: ["8", "9", "10", "11"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 5,
-        waterproof: true,
-      },
-    },
-    {
-      id: "am-boots-2",
-      title: "SummitLock Boots",
-      category: "boots",
-      price: 279,
-      currency: "USD",
-      shop: "alpineMart",
-      attributes: {
-        color: "green",
-        brand: "AlpinePro",
-        sizes: ["7", "8", "9"],
-        deliveryDaysMin: 5,
-        deliveryDaysMax: 8,
-        waterproof: false,
-      },
-    },
-    {
-      id: "am-gloves-1",
-      title: "SummitGrip Gloves",
-      category: "gloves",
-      price: 89,
-      currency: "USD",
-      shop: "alpineMart",
-      attributes: {
-        color: "red",
-        brand: "AlpinePro",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 3,
-        waterproof: true,
-      },
-    },
-    {
-      id: "am-gloves-2",
-      title: "FrostLock Gloves",
-      category: "gloves",
-      price: 74,
-      currency: "USD",
-      shop: "alpineMart",
-      attributes: {
-        color: "blue",
-        brand: "ColdTrail",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 6,
-        waterproof: true,
-      },
-    },
-    {
-      id: "am-base-1",
-      title: "ThermoCore Base Top",
-      category: "baseLayer",
-      price: 79,
-      currency: "USD",
-      shop: "alpineMart",
-      attributes: {
-        color: "black",
-        brand: "GlacierWool",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 1,
-        deliveryDaysMax: 3,
-        waterproof: false,
-      },
-    },
-    {
-      id: "am-base-2",
-      title: "ThermoCore Base Bottom",
-      category: "baseLayer",
-      price: 69,
-      currency: "USD",
-      shop: "alpineMart",
-      attributes: {
-        color: "black",
-        brand: "GlacierWool",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 1,
-        deliveryDaysMax: 3,
-        waterproof: false,
-      },
-    },
-  ],
-  snowBase: [
-    {
-      id: "sb-jacket-1",
-      title: "NorthWind Jacket",
-      category: "jacket",
-      price: 299,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "black",
-        brand: "IceForge",
-        sizes: ["m", "l", "xl"],
-        deliveryDaysMin: 4,
-        deliveryDaysMax: 9,
-        waterproof: true,
-      },
-    },
-    {
-      id: "sb-jacket-2",
-      title: "DriftGuard Jacket",
-      category: "jacket",
-      price: 249,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "green",
-        brand: "SnowPulse",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 6,
-        waterproof: true,
-      },
-    },
-    {
-      id: "sb-pants-1",
-      title: "TrailFlex Pants",
-      category: "pants",
-      price: 189,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "black",
-        brand: "RidgeWorks",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 4,
-        waterproof: true,
-      },
-    },
-    {
-      id: "sb-pants-2",
-      title: "DriftGuard Pants",
-      category: "pants",
-      price: 179,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "blue",
-        brand: "SnowPulse",
-        sizes: ["m", "l"],
-        deliveryDaysMin: 4,
-        deliveryDaysMax: 7,
-        waterproof: false,
-      },
-    },
-    {
-      id: "sb-boots-1",
-      title: "IceTrack Boots",
-      category: "boots",
-      price: 239,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "black",
-        brand: "IceForge",
-        sizes: ["8", "9", "10"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 6,
-        waterproof: true,
-      },
-    },
-    {
-      id: "sb-boots-2",
-      title: "SummitRise Boots",
-      category: "boots",
-      price: 259,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "yellow",
-        brand: "PeakWear",
-        sizes: ["7", "8", "9", "10"],
-        deliveryDaysMin: 5,
-        deliveryDaysMax: 8,
-        waterproof: false,
-      },
-    },
-    {
-      id: "sb-gloves-1",
-      title: "PolarShield Gloves",
-      category: "gloves",
-      price: 95,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "black",
-        brand: "RidgeWorks",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 4,
-        deliveryDaysMax: 6,
-        waterproof: true,
-      },
-    },
-    {
-      id: "sb-gloves-2",
-      title: "AlpineLite Gloves",
-      category: "gloves",
-      price: 69,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "white",
-        brand: "PeakWear",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 4,
-        waterproof: false,
-      },
-    },
-    {
-      id: "sb-base-1",
-      title: "HeatFlex Base Top",
-      category: "baseLayer",
-      price: 64,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "black",
-        brand: "PeakWear",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 1,
-        deliveryDaysMax: 2,
-        waterproof: false,
-      },
-    },
-    {
-      id: "sb-base-2",
-      title: "HeatFlex Base Bottom",
-      category: "baseLayer",
-      price: 58,
-      currency: "USD",
-      shop: "snowBase",
-      attributes: {
-        color: "black",
-        brand: "PeakWear",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 1,
-        deliveryDaysMax: 2,
-        waterproof: false,
-      },
-    },
-  ],
-  peakShop: [
-    {
-      id: "ps-jacket-1",
-      title: "StormShield Jacket",
-      category: "jacket",
-      price: 279,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "black",
-        brand: "NorthPeak",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 4,
-        waterproof: true,
-      },
-    },
-    {
-      id: "ps-jacket-2",
-      title: "SummitArc Jacket",
-      category: "jacket",
-      price: 269,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "red",
-        brand: "AlpinePro",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 5,
-        waterproof: true,
-      },
-    },
-    {
-      id: "ps-pants-1",
-      title: "SummitTrack Pants",
-      category: "pants",
-      price: 205,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "black",
-        brand: "GlacierWool",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 6,
-        waterproof: true,
-      },
-    },
-    {
-      id: "ps-pants-2",
-      title: "IceTrack Pants",
-      category: "pants",
-      price: 189,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "blue",
-        brand: "RidgeWorks",
-        sizes: ["m", "l", "xl"],
-        deliveryDaysMin: 4,
-        deliveryDaysMax: 7,
-        waterproof: false,
-      },
-    },
-    {
-      id: "ps-boots-1",
-      title: "RidgeLock Boots",
-      category: "boots",
-      price: 269,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "black",
-        brand: "RidgeWorks",
-        sizes: ["8", "9", "10", "11"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 5,
-        waterproof: true,
-      },
-    },
-    {
-      id: "ps-boots-2",
-      title: "AlpineRise Boots",
-      category: "boots",
-      price: 289,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "white",
-        brand: "AlpinePro",
-        sizes: ["7", "8", "9"],
-        deliveryDaysMin: 5,
-        deliveryDaysMax: 9,
-        waterproof: false,
-      },
-    },
-    {
-      id: "ps-gloves-1",
-      title: "ColdTrail Gloves",
-      category: "gloves",
-      price: 79,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "blue",
-        brand: "ColdTrail",
-        sizes: ["s", "m", "l"],
-        deliveryDaysMin: 2,
-        deliveryDaysMax: 4,
-        waterproof: true,
-      },
-    },
-    {
-      id: "ps-gloves-2",
-      title: "SummitGrip Gloves",
-      category: "gloves",
-      price: 92,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "black",
-        brand: "AlpinePro",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 6,
-        waterproof: true,
-      },
-    },
-    {
-      id: "ps-base-1",
-      title: "MerinoWarm Base Top",
-      category: "baseLayer",
-      price: 85,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "black",
-        brand: "NordicMerino",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 1,
-        deliveryDaysMax: 3,
-        waterproof: false,
-      },
-    },
-    {
-      id: "ps-base-2",
-      title: "MerinoWarm Base Bottom",
-      category: "baseLayer",
-      price: 75,
-      currency: "USD",
-      shop: "peakShop",
-      attributes: {
-        color: "black",
-        brand: "NordicMerino",
-        sizes: ["s", "m", "l", "xl"],
-        deliveryDaysMin: 1,
-        deliveryDaysMax: 3,
-        waterproof: false,
-      },
-    },
-  ],
-};
-
 const CATEGORY_ORDER = ["jacket", "pants", "boots", "gloves", "baseLayer"];
 
 const isValidShopId = (value: string): value is ShopId =>
@@ -600,31 +111,66 @@ const addDays = (base: string, days: number): Date | null => {
 };
 
 const queryShop = (shop: ShopId, query: ShopQuery): SearchItem[] => {
-  const items = CATALOG[shop] ?? [];
   const budget = query.budget;
   const deadline = query.deadline ? parseDate(query.deadline) : null;
   const prefColor = toLowerString(query.preferences.color);
   const prefBrand = toLowerString(query.preferences.brand);
   const prefSize = toLowerString(query.preferences.size);
 
-  return items.filter((item) => {
-    if (!query.categories.includes(item.category)) return false;
-    if (budget) {
-      if (item.currency !== budget.currency) return false;
-      if (item.price > budget.max) return false;
+  const attributes: Record<string, AttributeValue> = {};
+  if (prefColor) attributes.color = prefColor;
+  if (prefBrand) attributes.brand = prefBrand;
+  if (prefSize) attributes.size = prefSize;
+
+  const buildDbRequest = (
+    attrOverrides: Record<string, AttributeValue>
+  ): { apiRequests: Array<{ shop: string; query: { categories?: string[]; priceMax?: number; attributes?: Record<string, AttributeValue> } }> } => ({
+    apiRequests: [
+      {
+        shop,
+        query: {
+          categories: query.categories,
+          priceMax: budget?.max,
+          attributes: attrOverrides,
+        },
+      },
+    ],
+  });
+
+  const attributeVariants: Record<string, AttributeValue>[] = [attributes];
+  if (attributes.color) {
+    const { color, ...rest } = attributes;
+    attributeVariants.push(rest);
+  }
+  if (attributes.brand) {
+    const { brand, ...rest } = attributes;
+    attributeVariants.push(rest);
+  }
+  if (attributes.color && attributes.brand) {
+    const { color, brand, ...rest } = attributes;
+    attributeVariants.push(rest);
+  }
+
+  let dbItems: SearchItem[] = [];
+  for (const variant of attributeVariants) {
+    try {
+      dbItems = realDatabase(buildDbRequest(variant)).items;
+    } catch {
+      dbItems = [];
     }
-    const attributes = item.attributes ?? {};
-    if (prefColor && toLowerString(attributes.color) !== prefColor) return false;
-    if (prefBrand && toLowerString(attributes.brand) !== prefBrand) return false;
-    if (prefSize) {
-      const sizes = attributes.sizes;
-      const sizeList = Array.isArray(sizes) ? sizes : [sizes];
-      const hasSize = sizeList.some(
-        (size) => toLowerString(size) === prefSize
-      );
-      if (!hasSize) return false;
+    if (dbItems.length > 0) break;
+  }
+  if (dbItems.length === 0) {
+    for (const variant of attributeVariants) {
+      dbItems = fakeDatabase(buildDbRequest(variant)).items;
+      if (dbItems.length > 0) break;
     }
+  }
+
+  return dbItems.filter((item) => {
+    if (budget && item.currency !== budget.currency) return false;
     if (deadline) {
+      const attributes = item.attributes ?? {};
       const deliveryDaysMax = Number(attributes.deliveryDaysMax);
       const arrival = addDays(BASE_DATE, deliveryDaysMax);
       if (!arrival || arrival > deadline) return false;
@@ -712,6 +258,7 @@ const isVitest = typeof process !== "undefined" && process.env.VITEST;
 
 void (async () => {
   if (!isVitest) return;
+  // @ts-expect-error - vitest types provided at test time
   const { describe, expect, it } = await import("vitest");
 
   describe("searchAgent", () => {
