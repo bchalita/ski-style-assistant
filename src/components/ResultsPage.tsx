@@ -11,7 +11,7 @@ export default function ResultsPage() {
   const [showExplanation, setShowExplanation] = useState(false);
 
   const confirmedCount = confirmedItems.size;
-  const allConfirmed = confirmedCount === CATEGORIES.length;
+  const hasConfirmed = confirmedCount > 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -76,15 +76,15 @@ export default function ResultsPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4">
         <button
           onClick={goToCheckout}
-          disabled={!allConfirmed}
+          disabled={!hasConfirmed}
           className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="w-5 h-5" />
           Checkout — ${totalPrice}
         </button>
-        {!allConfirmed && (
+        {!hasConfirmed && (
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Confirm all items to proceed
+            Confirm at least one item to proceed
           </p>
         )}
       </div>
