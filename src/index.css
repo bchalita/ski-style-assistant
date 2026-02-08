@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+    --primary: 211 84% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 15% 93%;
+    --secondary-foreground: 215 25% 25%;
+    --muted: 210 15% 95%;
+    --muted-foreground: 215 10% 50%;
+    --accent: 211 84% 92%;
+    --accent-foreground: 211 84% 35%;
+    --border: 210 15% 88%;
+    --input: 210 15% 88%;
+    --ring: 211 84% 55%;
+    --radius: 0.75rem;
+
+    --alpine-sky: 211 84% 55%;
+    --alpine-snow: 210 20% 98%;
+    --alpine-ice: 200 60% 94%;
+    --alpine-peak: 215 25% 30%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* Dotted background pattern */
+.bg-dotted {
+  background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Mountain silhouette */
+.mountain-silhouette {
+  position: relative;
+}
+.mountain-silhouette::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(135deg,
+    transparent 33%,
+    hsl(var(--alpine-sky) / 0.1) 33%,
+    hsl(var(--alpine-sky) / 0.1) 40%,
+    transparent 40%,
+    transparent 50%,
+    hsl(var(--alpine-sky) / 0.15) 50%,
+    hsl(var(--alpine-sky) / 0.15) 60%,
+    transparent 60%,
+    transparent 70%,
+    hsl(var(--alpine-sky) / 0.08) 70%,
+    hsl(var(--alpine-sky) / 0.08) 80%,
+    transparent 80%
+  );
+  pointer-events: none;
+}
