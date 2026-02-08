@@ -136,15 +136,17 @@ function assembleOutfits(items: SearchItem[], budget?: { currency: string; max: 
   };
   bt(0, []);
 
-  const budgetMax = budget?.max ?? Infinity;
   const currency = budget?.currency ?? "USD";
-  const feasible = combos
+  const allPriced = combos
     .map(c => ({ items: c, total: c.reduce((s, i) => s + i.price, 0) }))
-    .filter(c => c.total <= budgetMax)
-    .sort((a, b) => a.total - b.total)
-    .slice(0, 5);
+    .sort((a, b) => a.total - b.total);
 
-  if (feasible.length === 0) return { outfitOptions: [], infeasibleReason: "No outfit fits under budget" };
+  // If budget set, prefer under-budget; if none fit, return cheapest anyway
+  const budgetMax = budget?.max ?? Infinity;
+  const underBudget = allPriced.filter(c => c.total <= budgetMax);
+  const feasible = (underBudget.length > 0 ? underBudget : allPriced).slice(0, 5);
+
+  if (feasible.length === 0) return { outfitOptions: [], infeasibleReason: "No outfit combinations could be generated" };
 
   return {
     outfitOptions: feasible.map(f => ({
