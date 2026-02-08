@@ -23,7 +23,7 @@ export default function SearchingScreen() {
         }
         return Math.min(p + 1, 100);
       });
-    }, 65);
+    }, 40);
     return () => clearInterval(interval);
   }, []);
 
