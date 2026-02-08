@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Mountain, ShoppingCart, Snowflake } from "lucide-react";
+import { Mountain, ShoppingCart, Snowflake, ChevronDown, ChevronUp } from "lucide-react";
 import ItemCard from "./ItemCard";
 import { ProductCategory } from "@/types";
 
 const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "boots"];
 
 export default function ResultsPage() {
-  const { outfit, confirmedItems, totalPrice, goToCheckout } = useApp();
+  const { outfit, confirmedItems, totalPrice, goToCheckout, rankingExplanation } = useApp();
+  const [showExplanation, setShowExplanation] = useState(false);
 
   const confirmedCount = confirmedItems.size;
   const allConfirmed = confirmedCount === CATEGORIES.length;
@@ -42,11 +44,30 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {/* AI Explanation */}
+      {rankingExplanation && (
+        <div className="px-6 pb-4">
+          <button
+            onClick={() => setShowExplanation(!showExplanation)}
+            className="flex items-center gap-2 text-sm font-medium text-primary hover:opacity-80 transition-opacity"
+          >
+            <Snowflake className="w-4 h-4" />
+            Why these items?
+            {showExplanation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          {showExplanation && (
+            <div className="mt-2 p-4 rounded-xl bg-accent/50 border border-border text-sm text-foreground leading-relaxed">
+              {rankingExplanation}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Card grid */}
       <div className="flex-1 px-6 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {CATEGORIES.map((cat) => (
-            <ItemCard key={cat} product={outfit[cat]} category={cat} />
+            outfit[cat]?.id ? <ItemCard key={cat} product={outfit[cat]} category={cat} /> : null
           ))}
         </div>
       </div>
