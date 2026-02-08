@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Mountain, ArrowLeft, Check } from "lucide-react";
+import { Mountain, ArrowLeft, Check, Home } from "lucide-react";
 import { ProductCategory } from "@/types";
 
 const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "boots"];
 
 export default function CheckoutPage() {
-  const { outfit, totalPrice, goBackToResults } = useApp();
+  const { outfit, confirmedItems, totalPrice, goBackToResults, goHome } = useApp();
   const [submitted, setSubmitted] = useState(false);
 
-  const items = CATEGORIES.map((cat) => outfit[cat]);
+  const items = CATEGORIES.filter((cat) => confirmedItems.has(cat)).map((cat) => outfit[cat]);
+  const cartTotal = items.reduce((sum, p) => sum + p.price, 0);
   const shipping = 0;
-  const total = totalPrice + shipping;
+  const total = cartTotal + shipping;
 
   if (submitted) {
     return (
@@ -21,7 +22,14 @@ export default function CheckoutPage() {
             <Check className="w-10 h-10 text-primary" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Order Confirmed!</h2>
-          <p className="text-muted-foreground">Thank you for your purchase. Your gear is on the way! 🎿</p>
+          <p className="text-muted-foreground mb-6">Thank you for your purchase. Your gear is on the way! 🎿</p>
+          <button
+            onClick={goHome}
+            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2 mx-auto hover:opacity-90 transition-opacity"
+          >
+            <Home className="w-5 h-5" />
+            Back Home
+          </button>
         </div>
       </div>
     );
@@ -59,7 +67,7 @@ export default function CheckoutPage() {
           <div className="border-t border-border mt-6 pt-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="text-foreground">${totalPrice}</span>
+              <span className="text-foreground">${cartTotal}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>

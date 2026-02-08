@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Snowflake } from "lucide-react";
 
 const PRO_TIPS = [
-  "Layer your ski clothing for maximum warmth and flexibility",
-  "GORE-TEX fabric keeps you dry in the harshest conditions",
-  "A proper fit is key — not too tight, not too loose",
-  "Don't forget UV protection at high altitudes!",
-  "Merino wool baselayers regulate temperature naturally",
+  "Picking the perfect outfit just for you ❄️",
+  "No one will look better than you on that mountain peak 🏔️",
+  "Matching colors, warmth, and style to your vibe 🎿",
+  "Checking every seam, every zipper, every layer 🧤",
+  "Almost there — your dream outfit awaits ⛷️",
 ];
 
 export default function SearchingScreen() {
@@ -16,14 +16,14 @@ export default function SearchingScreen() {
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((p) => Math.min(p + 1, 100));
-    }, 30);
+    }, 50);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setTipIndex((i) => (i + 1) % PRO_TIPS.length);
-    }, 2500);
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
