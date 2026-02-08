@@ -63,7 +63,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMessages((prev) => [...prev, msg]);
   }, []);
 
-  // Lazy-load the API module to avoid crashing if Supabase env vars aren't ready
+  // Lazy-load the API module
   const getApi = useCallback(async () => {
     const api = await import("@/services/api");
     return api;

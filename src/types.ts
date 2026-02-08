@@ -78,11 +78,15 @@ export function mapBackendItemToProduct(item: BackendItem): Product {
   const brand = String(attrs.brand ?? "");
   const category = CATEGORY_MAP[item.category] ?? "jacket";
   
-  // Use image from attributes (served from /product_images/)
+  // Use image from attributes (served from /product_images/ in public/)
   const rawImage = String(attrs.image ?? "");
-  const imageUrl = rawImage
-    ? `/${rawImage}`
-    : String(attrs.imageUrl ?? "") || categoryImage(category, color);
+  let imageUrl: string;
+  if (rawImage) {
+    // CSV paths like "product_images/xxx.jpg" → "/product_images/xxx.jpg"
+    imageUrl = rawImage.startsWith("/") ? rawImage : `/${rawImage}`;
+  } else {
+    imageUrl = String(attrs.imageUrl ?? "") || categoryImage(category, color);
+  }
 
   return {
     id: item.id,
