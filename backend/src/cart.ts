@@ -131,3 +131,51 @@ export function addItemsToCart(input: AddItemsInput): Cart | null {
 
   return cart;
 }
+
+// --- Step 3: removeItem ---
+
+/** Input to removeItem */
+export interface RemoveItemInput {
+  cartId: string;
+  itemId: string;
+  /** Amount to subtract from subtotal (e.g. item price × quantity removed) */
+  amountToSubtract?: number;
+}
+
+/**
+ * Removes one unit of an item from the cart.
+ * - If quantity becomes 0, removes the line item.
+ * - Recomputes totals. Pass amountToSubtract when you know the item price.
+ * - Returns null if cart not found.
+ */
+export function removeItem(input: RemoveItemInput): Cart | null {
+  const { cartId, itemId, amountToSubtract = 0 } = input;
+  const cart = cartStore.get(cartId);
+  if (!cart) return null;
+
+  const lineItem = cart.lineItems.find((li) => li.itemId === itemId);
+  if (!lineItem) return cart;
+
+  if (lineItem.quantity <= 1) {
+    cart.lineItems = cart.lineItems.filter((li) => li.itemId !== itemId);
+  } else {
+    lineItem.quantity -= 1;
+  }
+
+  const currency = cart.totals?.currency ?? "USD";
+  const oldSubtotal = cart.totals?.subtotal ?? 0;
+  const newSubtotal = Math.max(0, oldSubtotal - amountToSubtract);
+  const tax = 0;
+  const shipping = 0;
+  const total = newSubtotal + tax + shipping;
+
+  cart.totals = {
+    currency,
+    subtotal: newSubtotal,
+    tax,
+    shipping,
+    total,
+  };
+
+  return cart;
+}
