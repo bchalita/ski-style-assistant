@@ -1,10 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import { AppScreen, ChatMessage, Product, ProductCategory, mapBackendItemToProduct } from "@/types";
-import {
-  callRequestAgent,
-  callOutfitPipeline,
-  type RequestAgentOutput,
-} from "@/services/api";
+import { AppScreen, ChatMessage, Product, ProductCategory } from "@/types";
 
 interface AppState {
   screen: AppScreen;
@@ -59,22 +54,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [allItems, setAllItems] = useState<Product[]>([]);
 
   // Accumulated state from request agent
-  const [previousOutput, setPreviousOutput] = useState<RequestAgentOutput | undefined>();
+  const [previousOutput, setPreviousOutput] = useState<any>(undefined);
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
-  const [userPrompt, setUserPrompt] = useState("");
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => [...prev, msg]);
   }, []);
 
-  const runOutfitPipeline = useCallback(async (agentOutput: RequestAgentOutput, prompt: string) => {
+  // Lazy-load the API module to avoid crashing if Supabase env vars aren't ready
+  const getApi = useCallback(async () => {
+    const api = await import("@/services/api");
+    return api;
+  }, []);
+
+  const runOutfitPipeline = useCallback(async (agentOutput: any, prompt: string) => {
     setScreen("loading");
     try {
+      const { callOutfitPipeline, mapBackendItemToProduct } = await getApi().then(async (api) => {
+        const { mapBackendItemToProduct } = await import("@/types");
+        return { callOutfitPipeline: api.callOutfitPipeline, mapBackendItemToProduct };
+      });
+
       const result = await callOutfitPipeline(agentOutput, prompt);
       const products = result.items.map(mapBackendItemToProduct);
       setAllItems(products);
 
-      // Find recommended outfit and map items
       const recommendedId = result.recommendedOutfitId;
       const recommendedOption = result.outfitOptions.find((o) => o.id === recommendedId) ?? result.outfitOptions[0];
 
@@ -89,7 +93,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setOutfit(outfitRecord);
       }
 
-      // Set explanation from ranking
       const topRanked = result.ranked?.find((r) => r.outfitId === recommendedId) ?? result.ranked?.[0];
       if (topRanked?.explanation) {
         setRankingExplanation(topRanked.explanation);
@@ -105,7 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       setScreen("chat");
     }
-  }, [addMessage]);
+  }, [addMessage, getApi]);
 
   const sendMessage = useCallback(async (text: string) => {
     const userMsg: ChatMessage = {
@@ -117,10 +120,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const updatedHistory = [...conversationHistory, text];
     setConversationHistory(updatedHistory);
-    setUserPrompt((prev) => (prev ? `${prev}. ${text}` : text));
 
     try {
-      const agentOutput = await callRequestAgent(text, {
+      const api = await getApi();
+      const agentOutput = await api.callRequestAgent(text, {
         previousMessages: updatedHistory,
         previousOutput,
       });
@@ -128,7 +131,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setPreviousOutput(agentOutput);
 
       if (agentOutput.clarifyingQuestion) {
-        // Generate quick replies based on what might be missing
         const quickReplies = generateQuickReplies(agentOutput);
         const assistantMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -138,7 +140,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         addMessage(assistantMsg);
       } else {
-        // All info collected, run pipeline
         const assistantMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
@@ -150,14 +151,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Request agent error:", err);
-      // Fallback: show error
       addMessage({
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        text: "Sorry, I couldn't process that. Make sure the backend is running and try again.",
+        text: "Sorry, I couldn't process that. The backend may still be initializing — please try again in a moment.",
       });
     }
-  }, [conversationHistory, previousOutput, addMessage, runOutfitPipeline]);
+  }, [conversationHistory, previousOutput, addMessage, runOutfitPipeline, getApi]);
 
   const toggleConfirmItem = useCallback((category: ProductCategory) => {
     setConfirmedItems((prev) => {
@@ -178,7 +178,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getAlternatives = useCallback((category: ProductCategory) => {
-    // Return other items from same category (excluding current outfit item)
     const currentId = outfit[category]?.id;
     return allItems.filter((p) => p.category === category && p.id !== currentId);
   }, [allItems, outfit]);
@@ -212,7 +211,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function generateQuickReplies(output: RequestAgentOutput): string[] {
+function generateQuickReplies(output: any): string[] {
   const question = output.clarifyingQuestion?.toLowerCase() ?? "";
 
   if (question.includes("budget")) {
