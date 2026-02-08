@@ -76,6 +76,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       const result = await callOutfitPipeline(agentOutput, prompt);
+      
+      // Handle infeasible results
+      if (result.infeasibleReason || result.outfitOptions.length === 0) {
+        addMessage({
+          id: Date.now().toString(),
+          role: "assistant",
+          text: result.infeasibleReason 
+            ? `I couldn't find a complete outfit within your constraints: ${result.infeasibleReason}. Try adjusting your budget or removing some items.`
+            : "I couldn't assemble a complete outfit with those constraints. Try adjusting your requirements.",
+          quickReplies: ["Increase budget to $1000", "Just jacket & pants", "Best guess"],
+        });
+        setScreen("chat");
+        return;
+      }
+
       const products = result.items.map(mapBackendItemToProduct);
       setAllItems(products);
 

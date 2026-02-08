@@ -79,7 +79,9 @@ function hasAlphaSize(t: string): boolean {
 function hasBootSize(mustHaves: string[], t: string): boolean {
   const l = `${mustHaves.join("\n")}\n${t}`.toLowerCase();
   if (l.includes("shoe size") || l.includes("boot size")) return true;
-  return /\b(boot|boots)\b/.test(l) && (/\b(us|eu|uk)\b/.test(l) || /\b\d{1,2}(\.\d)?\b/.test(l));
+  // If user mentions US/EU/UK + number, that's a boot size
+  if (/\b(us|eu|uk)\s*\d{1,2}(\.\d)?\b/.test(l)) return true;
+  return /\b(boot|boots)\b/.test(l) && /\b\d{1,2}(\.\d)?\b/.test(l);
 }
 
 function hasAnyItems(mustHaves: string[], niceToHaves: string[], t: string): boolean {
@@ -144,6 +146,59 @@ function generateQuestion(missing: MissingKey[], t: string): string {
 
 function isoDateToday(): string { return new Date().toISOString().slice(0, 10); }
 
+// --- Deterministic parsers (fallback when AI is unavailable) ---
+function parseBudget(text: string): { currency: string; max: number } | null {
+  const t = text.toLowerCase();
+  // Match patterns like "$500", "500 usd", "500 dollars", "under $1000", "$500-$1000"
+  const m = t.match(/\$\s*(\d[\d,]*)/);
+  if (m) return { currency: "USD", max: parseInt(m[1].replace(/,/g, ''), 10) };
+  const m2 = t.match(/(\d[\d,]*)\s*(?:usd|dollars?|bucks)/);
+  if (m2) return { currency: "USD", max: parseInt(m2[1].replace(/,/g, ''), 10) };
+  const m3 = t.match(/(?:€|eur)\s*(\d[\d,]*)/i);
+  if (m3) return { currency: "EUR", max: parseInt(m3[1].replace(/,/g, ''), 10) };
+  const m4 = t.match(/(\d[\d,]*)\s*(?:€|eur)/i);
+  if (m4) return { currency: "EUR", max: parseInt(m4[1].replace(/,/g, ''), 10) };
+  const m5 = t.match(/(?:£|gbp)\s*(\d[\d,]*)/i);
+  if (m5) return { currency: "GBP", max: parseInt(m5[1].replace(/,/g, ''), 10) };
+  // Range like "$500-$1000" - take the upper bound
+  const range = t.match(/\$\s*\d[\d,]*\s*[-–]\s*\$\s*(\d[\d,]*)/);
+  if (range) return { currency: "USD", max: parseInt(range[1].replace(/,/g, ''), 10) };
+  return null;
+}
+
+function parseDeliveryDeadline(text: string, today: string): string | null {
+  const t = text.toLowerCase();
+  const todayDate = new Date(today);
+  // "this week"
+  if (t.includes("this week")) { const d = new Date(todayDate); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); }
+  // "in X weeks"
+  const wm = t.match(/in\s+(\d+)\s+weeks?/);
+  if (wm) { const d = new Date(todayDate); d.setDate(d.getDate() + parseInt(wm[1]) * 7); return d.toISOString().slice(0, 10); }
+  // "in X days"
+  const dm = t.match(/in\s+(\d+)\s+days?/);
+  if (dm) { const d = new Date(todayDate); d.setDate(d.getDate() + parseInt(dm[1])); return d.toISOString().slice(0, 10); }
+  // "no rush" / "whenever" / "no hurry"
+  if (t.includes("no rush") || t.includes("whenever") || t.includes("no hurry")) { const d = new Date(todayDate); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); }
+  // "next week"
+  if (t.includes("next week")) { const d = new Date(todayDate); d.setDate(d.getDate() + 14); return d.toISOString().slice(0, 10); }
+  // ISO date
+  const iso = t.match(/\d{4}-\d{2}-\d{2}/);
+  if (iso) return iso[0];
+  return null;
+}
+
+function applyDeterministicParsing(output: RequestAgentOutput, text: string, today: string): RequestAgentOutput {
+  const result = { ...output };
+  if (!result.budget) result.budget = parseBudget(text);
+  if (!result.deliveryDeadline) result.deliveryDeadline = parseDeliveryDeadline(text, today);
+  // Parse color
+  if (!result.preferences.color) {
+    const colorMatch = text.toLowerCase().match(/\b(black|navy|red|blue|gray|grey|white|green|orange|yellow|purple|pink)\b/);
+    if (colorMatch) result.preferences = { color: colorMatch[1] };
+  }
+  return result;
+}
+
 const SYSTEM_PROMPT = (todayISO: string) => [
   "You are RequestAgent, a normalization layer for a SKI OUTFIT shopping assistant.",
   "Scope: ski outfits only.",
@@ -174,59 +229,73 @@ serve(async (req) => {
 
     console.log("[request-agent] Processing:", userRequest.slice(0, 100));
 
-    // Call Lovable AI (Gemini)
-    const aiResponse = await fetch("https://iqbsjfvmutibnnxvvxyi.supabase.co/functions/v1/ai-proxy", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT(todayISO) },
-          {
-            role: "user",
-            content: `Normalize this user request into JSON. Only use info present.\n\n${JSON.stringify({
-              userRequest,
-              previousOutput: prevOutput,
-              previousMessages: prevMessages.slice(-10),
-              scope: { skiRelated: looksSkiRelated(userRequest, prevMessages), fullSuitRequested: wantsFullSuit(conversationText) },
-            })}`,
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-      }),
-    });
-
-    const aiData = await aiResponse.json();
-    console.log("[request-agent] AI response status:", aiResponse.status);
-
-    let parsed: unknown;
+    // Try AI first, fall back to deterministic parsing
+    let parsed: unknown = {};
     try {
-      const content = aiData.choices?.[0]?.message?.content ?? aiData.content ?? "{}";
-      // Strip markdown code fences if present
-      const cleaned = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-      parsed = JSON.parse(cleaned);
-    } catch {
-      console.error("[request-agent] Failed to parse AI response:", JSON.stringify(aiData).slice(0, 500));
-      parsed = {};
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://iqbsjfvmutibnnxvvxyi.supabase.co";
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+      
+      const aiResponse = await fetch(`${supabaseUrl}/functions/v1/ai-proxy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT(todayISO) },
+            {
+              role: "user",
+              content: `Normalize this user request into JSON. Only use info present.\n\n${JSON.stringify({
+                userRequest,
+                previousOutput: prevOutput,
+                previousMessages: prevMessages.slice(-10),
+                scope: { skiRelated: looksSkiRelated(userRequest, prevMessages), fullSuitRequested: wantsFullSuit(conversationText) },
+              })}`,
+            },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.2,
+        }),
+      });
+
+      console.log("[request-agent] AI response status:", aiResponse.status);
+
+      if (aiResponse.ok) {
+        const aiData = await aiResponse.json();
+        try {
+          const content = aiData.choices?.[0]?.message?.content ?? aiData.content ?? "{}";
+          const cleaned = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+          parsed = JSON.parse(cleaned);
+          console.log("[request-agent] AI parsed successfully");
+        } catch {
+          console.warn("[request-agent] Failed to parse AI content, using deterministic fallback");
+        }
+      } else {
+        console.warn("[request-agent] AI proxy returned", aiResponse.status, "- using deterministic fallback");
+      }
+    } catch (aiErr) {
+      console.warn("[request-agent] AI call failed, using deterministic fallback:", aiErr);
     }
 
     let out = mergeOutputs(prevOutput, ensureFullSuitItems(applyItemInference(sanitizeOutput(parsed), conversationText), conversationText));
+    
+    // Apply deterministic parsing on top (fills in anything AI missed)
+    out = applyDeterministicParsing(out, conversationText, todayISO);
 
     // Deterministic clarifying questions
     const outNoQ = { ...out, clarifyingQuestion: null };
     const miss = missingKeys(outNoQ, userRequest, prevMessages);
 
     if (miss.length === 0 || bestGuess) {
+      console.log("[request-agent] Ready to search, no missing keys");
       return new Response(JSON.stringify(outNoQ), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const q = generateQuestion(miss, conversationText).trim();
     const final = { ...outNoQ, clarifyingQuestion: q || null };
-    console.log("[request-agent] Clarifying:", q);
+    console.log("[request-agent] Clarifying:", q, "| Missing:", miss.join(","));
     return new Response(JSON.stringify(final), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err) {
