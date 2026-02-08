@@ -71,6 +71,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const runOutfitPipeline = useCallback(async (agentOutput: any, prompt: string) => {
     setScreen("loading");
+    const loadingStart = Date.now();
+    const MIN_LOADING_MS = 7000; // ensure progress bar completes
     try {
       const { callOutfitPipeline, mapBackendItemToProduct } = await getApi().then(async (api) => {
         const { mapBackendItemToProduct } = await import("@/types");
@@ -117,6 +119,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const topRanked = result.ranked?.find((r) => r.outfitId === recommendedId) ?? result.ranked?.[0];
       if (topRanked?.explanation) {
         setRankingExplanation(topRanked.explanation);
+      }
+
+      // Wait for loading bar to complete before showing results
+      const elapsed = Date.now() - loadingStart;
+      if (elapsed < MIN_LOADING_MS) {
+        await new Promise((r) => setTimeout(r, MIN_LOADING_MS - elapsed));
       }
 
       setScreen("results");
