@@ -76,7 +76,12 @@ export function mapBackendItemToProduct(item: BackendItem): Product {
   const size = String(attrs.size ?? "");
   const brand = String(attrs.brand ?? "");
   const category = CATEGORY_MAP[item.category] ?? "jacket";
-  const imageUrl = String(attrs.imageUrl ?? "") || categoryImage(category, color);
+  
+  // Use image from attributes (served from /product_images/)
+  const rawImage = String(attrs.image ?? "");
+  const imageUrl = rawImage
+    ? `/${rawImage}`
+    : String(attrs.imageUrl ?? "") || categoryImage(category, color);
 
   return {
     id: item.id,

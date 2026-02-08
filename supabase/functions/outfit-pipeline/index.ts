@@ -13,45 +13,360 @@ type ShopId = "alpineMart" | "snowBase" | "peakShop";
 type OutfitOption = { id: string; items: Array<{ itemId: string }>; totalPrice: { currency: string; amount: number }; notes?: string[] };
 type RankedOutfit = { outfitId: string; score: number; explanation: string };
 
-// ===== PRODUCT CATALOG (inline from fakeDatabase) =====
+// ===== CSV DATA (from data/retailer_*.csv) =====
+const CSV_ALPINE_MART = `item,brand,category,gender,time_of_delivery_days,price,size,color,style,warmth,waterproof,current_day,url,image
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,S,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_forage_canvas.jpeg
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,M,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_forage_canvas.jpeg
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,L,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_forage_canvas.jpeg
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,XL,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_forage_canvas.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XS,Black,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_black.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,S,Black,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_black.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,M,Black,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_black.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,L,Black,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_black.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XL,Black,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_black.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XXL,Black,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_black.jpeg
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,S,Blue,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_jake_blue.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,M,Blue,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_jake_blue.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,L,Blue,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_jake_blue.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,XL,Blue,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_jake_blue.png
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,S,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_copper_sky_canvas.jpeg
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,M,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_copper_sky_canvas.jpeg
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,L,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_copper_sky_canvas.jpeg
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,XL,Beige,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_copper_sky_canvas.jpeg
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XS,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,S,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,M,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,L,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XL,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XXL,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,3XL,Grey,Down Insulated,5,3,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_mens_mcmurdo_parkamushroom_grey.png
+MENS TRAVERSE GTX,Spyder,gloves,Men,6,99.0,S,Black,Insulated,4,4,2026-02-07,https://www.spyder.com/products/traverse-gtx-gloves-black-1,product_images/spyder_mens_traverse_gtx_black.png
+MENS TRAVERSE GTX,Spyder,gloves,Men,6,99.0,M,Black,Insulated,4,4,2026-02-07,https://www.spyder.com/products/traverse-gtx-gloves-black-1,product_images/spyder_mens_traverse_gtx_black.png
+MENS TRAVERSE GTX,Spyder,gloves,Men,6,99.0,L,Black,Insulated,4,4,2026-02-07,https://www.spyder.com/products/traverse-gtx-gloves-black-1,product_images/spyder_mens_traverse_gtx_black.png
+MENS TRAVERSE GTX,Spyder,gloves,Men,6,99.0,XL,Black,Insulated,4,4,2026-02-07,https://www.spyder.com/products/traverse-gtx-gloves-black-1,product_images/spyder_mens_traverse_gtx_black.png
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,S,Black,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_black.png
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,M,Black,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_black.png
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,L,Black,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_black.png
+FISSION SV GLOVE,Arc'teryx,gloves,Men,5,200.0,XL,Black,Insulated,4,4,2026-02-07,https://arcteryx.com/us/en/shop/fission-sv-glove-9939,product_images/arcteryx_fission_sv_glove_black.png
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XS,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,S,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,M,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,L,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XL,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XXL,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XXXL,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black.jpeg
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,S,Grey,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-storm-melange,product_images/spyder_mens_dare_pants_storm.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,M,Grey,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-storm-melange,product_images/spyder_mens_dare_pants_storm.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,L,Grey,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-storm-melange,product_images/spyder_mens_dare_pants_storm.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,XL,Grey,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-storm-melange,product_images/spyder_mens_dare_pants_storm.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,XXL,Grey,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-storm-melange,product_images/spyder_mens_dare_pants_storm.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,S,Grey,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-prospect-half-zip-storm,product_images/spyder_mens_prospect_half_zip_t_neck_storm.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,M,Grey,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-prospect-half-zip-storm,product_images/spyder_mens_prospect_half_zip_t_neck_storm.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,L,Grey,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-prospect-half-zip-storm,product_images/spyder_mens_prospect_half_zip_t_neck_storm.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,XL,Grey,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-prospect-half-zip-storm,product_images/spyder_mens_prospect_half_zip_t_neck_storm.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,XXL,Grey,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-prospect-half-zip-storm,product_images/spyder_mens_prospect_half_zip_t_neck_storm.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,S,Purple,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_very_berry.jpeg
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,M,Purple,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_very_berry.jpeg
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,L,Purple,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_very_berry.jpeg
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,XL,Purple,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_very_berry.jpeg
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,XXL,Purple,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_very_berry.jpeg
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XS,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,S,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,M,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,L,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XL,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XXL,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,3XL,Green,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_woodland_green.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,S,Black,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-black,product_images/spyder_mens_dare_pants_black.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,M,Black,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-black,product_images/spyder_mens_dare_pants_black.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,L,Black,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-black,product_images/spyder_mens_dare_pants_black.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,XL,Black,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-black,product_images/spyder_mens_dare_pants_black.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,XXL,Black,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-black,product_images/spyder_mens_dare_pants_black.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,8,Beige,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_toasted_brown_tnf_black.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,9,Beige,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_toasted_brown_tnf_black.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,10,Beige,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_toasted_brown_tnf_black.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,11,Beige,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_toasted_brown_tnf_black.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,12,Beige,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_toasted_brown_tnf_black.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,13,Beige,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_toasted_brown_tnf_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,S,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_tnf_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,M,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_tnf_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,L,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_tnf_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,XL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_tnf_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,XXL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_tnf_black.png
+SABRE PANT MEN'S,Arc'teryx,pants,Men,5,450.0,S,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/sabre-pant-8928,product_images/arcteryx_sabre_pant_men_s_vitality.jpeg
+SABRE PANT MEN'S,Arc'teryx,pants,Men,5,450.0,M,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/sabre-pant-8928,product_images/arcteryx_sabre_pant_men_s_vitality.jpeg
+SABRE PANT MEN'S,Arc'teryx,pants,Men,5,450.0,L,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/sabre-pant-8928,product_images/arcteryx_sabre_pant_men_s_vitality.jpeg
+SABRE PANT MEN'S,Arc'teryx,pants,Men,5,450.0,XL,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/sabre-pant-8928,product_images/arcteryx_sabre_pant_men_s_vitality.jpeg
+SABRE PANT MEN'S,Arc'teryx,pants,Men,5,450.0,XXL,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/sabre-pant-8928,product_images/arcteryx_sabre_pant_men_s_vitality.jpeg
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,S,Grey,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_gray_heather.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,M,Grey,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_gray_heather.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,L,Grey,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_gray_heather.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,XL,Grey,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_gray_heather.png
+ALPHA SV BIB PANT MEN'S,Arc'teryx,pants,Men,5,700.0,S,Red,Shell Bib,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/alpha-sv-bib-pant-9900,product_images/arcteryx_alpha_sv_bib_pant_men_s_dynasty.jpeg
+ALPHA SV BIB PANT MEN'S,Arc'teryx,pants,Men,5,700.0,M,Red,Shell Bib,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/alpha-sv-bib-pant-9900,product_images/arcteryx_alpha_sv_bib_pant_men_s_dynasty.jpeg
+ALPHA SV BIB PANT MEN'S,Arc'teryx,pants,Men,5,700.0,L,Red,Shell Bib,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/alpha-sv-bib-pant-9900,product_images/arcteryx_alpha_sv_bib_pant_men_s_dynasty.jpeg
+ALPHA SV BIB PANT MEN'S,Arc'teryx,pants,Men,5,700.0,XL,Red,Shell Bib,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/alpha-sv-bib-pant-9900,product_images/arcteryx_alpha_sv_bib_pant_men_s_dynasty.jpeg`;
+
+const CSV_SNOW_BASE = `item,brand,category,gender,time_of_delivery_days,price,size,color,style,warmth,waterproof,current_day,url,image
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XS,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,S,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,M,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,L,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XL,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XXL,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XXXL,Grey,Other,3,0,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_granite_grey.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,S,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_true_black.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,M,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_true_black.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,L,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_true_black.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,XL,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_true_black.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,XXL,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_true_black.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,L,Blue,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-titan-jacket-slate-blue,product_images/spyder_mens_titan_jacket_slate_blue.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,XL,Blue,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-titan-jacket-slate-blue,product_images/spyder_mens_titan_jacket_slate_blue.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,XXL,Blue,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-titan-jacket-slate-blue,product_images/spyder_mens_titan_jacket_slate_blue.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,S,Red,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/prospect-1-2-zip-spyder-red,product_images/spyder_mens_prospect_half_zip_t_neck_spyder_red.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,M,Red,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/prospect-1-2-zip-spyder-red,product_images/spyder_mens_prospect_half_zip_t_neck_spyder_red.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,L,Red,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/prospect-1-2-zip-spyder-red,product_images/spyder_mens_prospect_half_zip_t_neck_spyder_red.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,XL,Red,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/prospect-1-2-zip-spyder-red,product_images/spyder_mens_prospect_half_zip_t_neck_spyder_red.png
+MENS PROSPECT HALF ZIP T-NECK,Spyder,base_top,Men,6,99.0,XXL,Red,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/prospect-1-2-zip-spyder-red,product_images/spyder_mens_prospect_half_zip_t_neck_spyder_red.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,S,Blue,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_dusk_blue.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,M,Blue,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_dusk_blue.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,L,Blue,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_dusk_blue.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,XL,Blue,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_dusk_blue.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,XXL,Blue,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_dusk_blue.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XS,Green,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_forage_tatsu.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,S,Green,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_forage_tatsu.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,M,Green,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_forage_tatsu.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,L,Green,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_forage_tatsu.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XL,Green,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_forage_tatsu.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XXL,Green,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_forage_tatsu.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,8,Grey,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_black_asphalt_grey.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,9,Grey,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_black_asphalt_grey.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,10,Grey,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_black_asphalt_grey.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,11,Grey,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_black_asphalt_grey.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,12,Grey,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_black_asphalt_grey.png
+Men's Chilkat V 400 Waterproof Boots,The North Face,boots,Men,5,135.0,13,Grey,Boots,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-footwear/mens-boots-695280/mens-chilkat-v-400-waterproof-boots-NF0A5LVZ,product_images/north_face_black_asphalt_grey.png
+MENS TRAVERSE GTX GLOVES,Spyder,gloves,Men,6,99.0,S,Grey,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-traverse-gtx-gloves-storm,product_images/spyder_mens_traverse_gtx_gloves_storm.png
+MENS TRAVERSE GTX GLOVES,Spyder,gloves,Men,6,99.0,M,Grey,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-traverse-gtx-gloves-storm,product_images/spyder_mens_traverse_gtx_gloves_storm.png
+MENS TRAVERSE GTX GLOVES,Spyder,gloves,Men,6,99.0,L,Grey,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-traverse-gtx-gloves-storm,product_images/spyder_mens_traverse_gtx_gloves_storm.png
+MENS TRAVERSE GTX GLOVES,Spyder,gloves,Men,6,99.0,XL,Grey,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-traverse-gtx-gloves-storm,product_images/spyder_mens_traverse_gtx_gloves_storm.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XS,Grey,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_08_dark_gray.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,S,Grey,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_08_dark_gray.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,M,Grey,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_08_dark_gray.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,L,Grey,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_08_dark_gray.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XL,Grey,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_08_dark_gray.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XXL,Grey,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_08_dark_gray.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,S,Grey,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_medium_grey_heather.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,M,Grey,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_medium_grey_heather.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,L,Grey,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_medium_grey_heather.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,XL,Grey,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_medium_grey_heather.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,XXL,Grey,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_medium_grey_heather.png
+MENS OVERWEB GTX,Spyder,gloves,Men,6,130.0,S,Red,Insulated,4,4,2026-02-07,https://www.spyder.com/products/overweb-gtx-gloves-spyder-red,product_images/spyder_mens_overweb_gtx_spyder_red.png
+MENS OVERWEB GTX,Spyder,gloves,Men,6,130.0,M,Red,Insulated,4,4,2026-02-07,https://www.spyder.com/products/overweb-gtx-gloves-spyder-red,product_images/spyder_mens_overweb_gtx_spyder_red.png
+MENS OVERWEB GTX,Spyder,gloves,Men,6,130.0,L,Red,Insulated,4,4,2026-02-07,https://www.spyder.com/products/overweb-gtx-gloves-spyder-red,product_images/spyder_mens_overweb_gtx_spyder_red.png
+MENS OVERWEB GTX,Spyder,gloves,Men,6,130.0,XL,Red,Insulated,4,4,2026-02-07,https://www.spyder.com/products/overweb-gtx-gloves-spyder-red,product_images/spyder_mens_overweb_gtx_spyder_red.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XS,Black,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_black.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,S,Black,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_black.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,M,Black,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_black.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,L,Black,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_black.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XL,Black,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_black.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XXL,Black,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_black.png
+Men's Summit Series Pro 120 Crew,The North Face,base_top,Men,5,100.0,S,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/collections/mens-summit-series-snow-348281/mens-summit-series-pro-120-crew-NF0A87ZT,product_images/north_face_tnf_black.png
+Men's Summit Series Pro 120 Crew,The North Face,base_top,Men,5,100.0,M,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/collections/mens-summit-series-snow-348281/mens-summit-series-pro-120-crew-NF0A87ZT,product_images/north_face_tnf_black.png
+Men's Summit Series Pro 120 Crew,The North Face,base_top,Men,5,100.0,L,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/collections/mens-summit-series-snow-348281/mens-summit-series-pro-120-crew-NF0A87ZT,product_images/north_face_tnf_black.png
+Men's Summit Series Pro 120 Crew,The North Face,base_top,Men,5,100.0,XL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/collections/mens-summit-series-snow-348281/mens-summit-series-pro-120-crew-NF0A87ZT,product_images/north_face_tnf_black.png
+Men's Summit Series Pro 120 Crew,The North Face,base_top,Men,5,100.0,XXL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/collections/mens-summit-series-snow-348281/mens-summit-series-pro-120-crew-NF0A87ZT,product_images/north_face_tnf_black.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,S,Orange,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-flash-orange,product_images/spyder_mens_dare_pants_flash_orange.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,M,Orange,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-flash-orange,product_images/spyder_mens_dare_pants_flash_orange.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,L,Orange,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-flash-orange,product_images/spyder_mens_dare_pants_flash_orange.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,XL,Orange,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-flash-orange,product_images/spyder_mens_dare_pants_flash_orange.png
+MENS DARE PANTS,Spyder,pants,Men,6,350.0,XXL,Orange,Insulated,3,4,2026-02-07,https://www.spyder.com/products/mens-dare-pants-flash-orange,product_images/spyder_mens_dare_pants_flash_orange.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,S,Beige,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_summit_taupe.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,M,Beige,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_summit_taupe.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,L,Beige,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_summit_taupe.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,XL,Beige,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_summit_taupe.png
+MENS MOMENTUM BASELAYER PANTS,Spyder,base_bottom,Men,6,69.0,S/M,Black,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-momentum-baselayer-pants-black,product_images/spyder_mens_momentum_baselayer_pants_black.png
+MENS MOMENTUM BASELAYER PANTS,Spyder,base_bottom,Men,6,69.0,L/XL,Black,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-momentum-baselayer-pants-black,product_images/spyder_mens_momentum_baselayer_pants_black.png
+MENS MOMENTUM BASELAYER PANTS,Spyder,base_bottom,Men,6,69.0,2X3X,Black,Baselayer,3,0,2026-02-07,https://www.spyder.com/products/mens-momentum-baselayer-pants-black,product_images/spyder_mens_momentum_baselayer_pants_black.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,L,White,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-titan-jacket-white,product_images/spyder_mens_titan_jacket_white.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,XL,White,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-titan-jacket-white,product_images/spyder_mens_titan_jacket_white.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,XXL,White,Insulated,4,4,2026-02-07,https://www.spyder.com/products/mens-titan-jacket-white,product_images/spyder_mens_titan_jacket_white.png`;
+
+const CSV_PEAK_SHOP = `item,brand,category,gender,time_of_delivery_days,price,size,color,style,warmth,waterproof,current_day,url,image
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XS,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,S,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,M,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,L,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XL,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XXL,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+Expedition Parka,Canada Goose,jacket,Men,5,1675.0,XXXL,Black,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_black.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,L,Beige,Insulated,4,4,2026-02-07,https://www.spyder.com/products/titan-jacket,product_images/spyder_mens_titan_jacket_black.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,XL,Beige,Insulated,4,4,2026-02-07,https://www.spyder.com/products/titan-jacket,product_images/spyder_mens_titan_jacket_black.png
+MENS TITAN JACKET,Spyder,jacket,Men,6,500.0,XXL,Beige,Insulated,4,4,2026-02-07,https://www.spyder.com/products/titan-jacket,product_images/spyder_mens_titan_jacket_black.png
+Men's Burton LZ GORE-TEX 2L Down Jacket,Burton,jacket,Men,6,724.95,S,Grey,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-lz-gore-tex-2l-down-jacket/W26-100061.html,product_images/burton_gray_cloud.png
+Men's Burton LZ GORE-TEX 2L Down Jacket,Burton,jacket,Men,6,724.95,M,Grey,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-lz-gore-tex-2l-down-jacket/W26-100061.html,product_images/burton_gray_cloud.png
+Men's Burton LZ GORE-TEX 2L Down Jacket,Burton,jacket,Men,6,724.95,L,Grey,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-lz-gore-tex-2l-down-jacket/W26-100061.html,product_images/burton_gray_cloud.png
+Men's Burton LZ GORE-TEX 2L Down Jacket,Burton,jacket,Men,6,724.95,XL,Grey,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-lz-gore-tex-2l-down-jacket/W26-100061.html,product_images/burton_gray_cloud.png
+Men's Burton LZ GORE-TEX 2L Down Jacket,Burton,jacket,Men,6,724.95,XXL,Grey,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-lz-gore-tex-2l-down-jacket/W26-100061.html,product_images/burton_gray_cloud.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,XS,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,S,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,M,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,L,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,XL,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,XXL,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Expedition Parka North Star,Canada Goose,jacket,Men,5,1675.0,XXXL,White,Down Insulated,5,3,2026-02-07,https://www.canadagoose.com/us/en/pr/expedition-parka-2051M.html,product_images/canada_goose_expedition_parka_north_star_white.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XS,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,S,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,M,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,L,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,XXL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's McMurdo Parka,The North Face,jacket,Men,5,400.0,3XL,Black,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-jackets-and-vests/mens-parkas-300775/mens-mcmurdo-parka-NF0A5GJF,product_images/north_face_tnf_black_tnf_black.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,S,Black,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_black.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,M,Black,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_black.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,L,Black,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_black.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,XL,Black,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_black.png
+Men's Montana Ski Gloves,The North Face,gloves,Men,5,65.0,XXL,Black,Insulated,4,4,2026-02-07,https://www.thenorthface.com/en-us/p/shop-all/snow-347788/mens-montana-ski-gloves-NF0A89QG,product_images/north_face_tnf_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,S,Red,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_sumac.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,M,Red,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_sumac.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,L,Red,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_sumac.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,XL,Red,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_sumac.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,XXL,Red,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_sumac.png
+Men's Burton Swash GORE-TEX 2L Jacket,Burton,jacket,Men,6,519.95,S,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-swash-gore-tex-2l-jacket/W26-100011.html,product_images/burton_true_black.png
+Men's Burton Swash GORE-TEX 2L Jacket,Burton,jacket,Men,6,519.95,M,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-swash-gore-tex-2l-jacket/W26-100011.html,product_images/burton_true_black.png
+Men's Burton Swash GORE-TEX 2L Jacket,Burton,jacket,Men,6,519.95,L,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-swash-gore-tex-2l-jacket/W26-100011.html,product_images/burton_true_black.png
+Men's Burton Swash GORE-TEX 2L Jacket,Burton,jacket,Men,6,519.95,XL,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-swash-gore-tex-2l-jacket/W26-100011.html,product_images/burton_true_black.png
+Men's Burton Swash GORE-TEX 2L Jacket,Burton,jacket,Men,6,519.95,XXL,Black,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-swash-gore-tex-2l-jacket/W26-100011.html,product_images/burton_true_black.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,S,Blue,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_summit_navy.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,M,Blue,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_summit_navy.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,L,Blue,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_summit_navy.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,XL,Blue,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_summit_navy.png
+Men's Freedom Pants,The North Face,pants,Men,5,200.0,XXL,Blue,Other,3,0,2026-02-07,https://www.thenorthface.com/en-us/p/mens/mens-bottoms/mens-pants-224219/mens-freedom-pants-NF0A5ABV,product_images/north_face_summit_navy.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,S,Beige,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_summit_taupe.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,M,Beige,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_summit_taupe.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,L,Beige,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_summit_taupe.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,XL,Beige,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_summit_taupe.png
+Men's Burton Freebird GORE-TEX 3L Stretch Bib Pants,Burton,pants,Men,6,669.95,XXL,Beige,Other,3,0,2026-02-07,https://www.burton.com/us/en/p/mens-burton-ak-freebird-gore-tex-3l-stretch-bib-pants/W26-100241.html,product_images/burton_summit_taupe.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XS,White,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_off_white.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,S,White,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_off_white.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,M,White,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_off_white.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,L,White,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_off_white.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XL,White,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_off_white.png
+HEATTECH Ultra Warm T-Shirt,Uniqlo,base_top,Unisex,6,34.9,XXL,White,Baselayer,4,0,2026-02-07,https://www.uniqlo.com/us/en/products/E479525-000/00,product_images/uniqlo_heattech_ultra_warm_t_shirt_off_white.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,S,Black,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_black.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,M,Black,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_black.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,L,Black,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_black.png
+Men's Burton GORE-TEX Mittens,Burton,gloves,Men,6,84.95,XL,Black,Insulated,4,4,2026-02-07,https://www.burton.com/us/en/p/mens-burton-gore-tex-mittens/W26-103841.html,product_images/burton_black.png
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XS,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,S,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,M,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,L,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XL,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XXL,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XXXL,Blue,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_black_sapphire.jpeg
+BETA SV PANT MEN'S,Arc'teryx,pants,Men,5,500.0,S,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-sv-pant-0280,product_images/arcteryx_beta_sv_pant_men_s_black.jpeg
+BETA SV PANT MEN'S,Arc'teryx,pants,Men,5,500.0,M,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-sv-pant-0280,product_images/arcteryx_beta_sv_pant_men_s_black.jpeg
+BETA SV PANT MEN'S,Arc'teryx,pants,Men,5,500.0,L,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-sv-pant-0280,product_images/arcteryx_beta_sv_pant_men_s_black.jpeg
+BETA SV PANT MEN'S,Arc'teryx,pants,Men,5,500.0,XL,Black,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-sv-pant-0280,product_images/arcteryx_beta_sv_pant_men_s_black.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XS,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,S,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,M,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,L,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XL,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XXL,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+BETA AR JACKET MEN'S,Arc'teryx,jacket,Men,5,650.0,XXXL,White,Shell,2,5,2026-02-07,https://arcteryx.com/us/en/shop/mens/beta-ar-jacket-9906,product_images/arcteryx_beta_ar_jacket_men_s_solitude_void.jpeg
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XS,Red,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_mars.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,S,Red,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_mars.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,M,Red,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_mars.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,L,Red,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_mars.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XL,Red,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_mars.png
+RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XXL,Red,Baselayer,3,0,2026-02-07,https://arcteryx.com/us/en/shop/mens/rho-lt-bottom-0037,product_images/arcteryx_rho_lt_bottom_men_s_mars.png`;
+
+// ===== CSV PARSER =====
+function normalizeCategory(cat: string): string {
+  const t = cat.trim().toLowerCase();
+  if (t === "base_top" || t === "base_bottom" || t === "base") return "baseLayer";
+  return t;
+}
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function parseCsvToCatalog(csv: string, shop: ShopId): SearchItem[] {
+  const lines = csv.split("\n").filter(l => l.trim());
+  const header = lines[0].split(",").map(h => h.trim());
+  const idx = (name: string) => header.indexOf(name);
+
+  const grouped = new Map<string, SearchItem>();
+
+  for (let i = 1; i < lines.length; i++) {
+    // Simple CSV split (no quoted fields in our data)
+    const fields = lines[i].split(",");
+    const itemName = fields[idx("item")]?.trim() || "";
+    const brand = fields[idx("brand")]?.trim() || "";
+    const category = normalizeCategory(fields[idx("category")] || "");
+    const deliveryDays = Number(fields[idx("time_of_delivery_days")] || 0);
+    const price = Number(fields[idx("price")] || 0);
+    const size = fields[idx("size")]?.trim() || "";
+    const color = fields[idx("color")]?.trim().toLowerCase() || "";
+    const style = fields[idx("style")]?.trim() || "";
+    const warmth = Number(fields[idx("warmth")] || 0);
+    const waterproofRating = Number(fields[idx("waterproof")] || 0);
+    const url = fields[idx("url")]?.trim() || "";
+    const image = fields[idx("image")]?.trim() || "";
+
+    if (!itemName || !brand || !category || !price) continue;
+
+    const key = [itemName, brand, category, color, style, price, image].join("|");
+    const id = slugify(`${shop}-${itemName}-${color}-${style}`.slice(0, 60));
+
+    if (!grouped.has(key)) {
+      const attributes: Record<string, AttributeValue> = {
+        color,
+        brand,
+        style,
+        sizes: [] as string[],
+        deliveryDaysMin: deliveryDays,
+        deliveryDaysMax: deliveryDays,
+        warmth,
+        waterproofRating,
+        waterproof: waterproofRating > 0,
+      };
+      if (image) attributes.image = image;
+
+      grouped.set(key, {
+        id,
+        title: itemName,
+        category,
+        price,
+        currency: "USD",
+        shop,
+        url: url || undefined,
+        attributes,
+      });
+    }
+
+    const item = grouped.get(key)!;
+    const sizes = item.attributes!.sizes as string[];
+    if (size && !sizes.includes(size)) sizes.push(size);
+    // Track min/max delivery
+    const curMin = item.attributes!.deliveryDaysMin as number;
+    const curMax = item.attributes!.deliveryDaysMax as number;
+    if (deliveryDays < curMin) item.attributes!.deliveryDaysMin = deliveryDays;
+    if (deliveryDays > curMax) item.attributes!.deliveryDaysMax = deliveryDays;
+  }
+
+  return Array.from(grouped.values());
+}
+
+// ===== BUILD CATALOG =====
 const CATALOG: Record<ShopId, SearchItem[]> = {
-  alpineMart: [
-    { id: "am-jacket-1", title: "Aurora Shell Jacket", category: "jacket", price: 289, currency: "USD", shop: "alpineMart", attributes: { color: "black", brand: "NorthPeak", sizes: ["s","m","l"], deliveryDaysMin: 2, deliveryDaysMax: 5, waterproof: true } },
-    { id: "am-jacket-2", title: "Summit Insulated Jacket", category: "jacket", price: 319, currency: "USD", shop: "alpineMart", attributes: { color: "blue", brand: "GlacierWool", sizes: ["m","l","xl"], deliveryDaysMin: 3, deliveryDaysMax: 6, waterproof: false } },
-    { id: "am-pants-1", title: "RidgeLine Pants", category: "pants", price: 199, currency: "USD", shop: "alpineMart", attributes: { color: "black", brand: "NorthPeak", sizes: ["s","m","l","xl"], deliveryDaysMin: 2, deliveryDaysMax: 4, waterproof: true } },
-    { id: "am-pants-2", title: "GlacierEdge Pants", category: "pants", price: 219, currency: "USD", shop: "alpineMart", attributes: { color: "white", brand: "IceForge", sizes: ["m","l"], deliveryDaysMin: 4, deliveryDaysMax: 7, waterproof: true } },
-    { id: "am-boots-1", title: "FrostGrip Boots", category: "boots", price: 249, currency: "USD", shop: "alpineMart", attributes: { color: "black", brand: "RidgeWorks", sizes: ["8","9","10","11"], deliveryDaysMin: 3, deliveryDaysMax: 5, waterproof: true } },
-    { id: "am-boots-2", title: "SummitLock Boots", category: "boots", price: 279, currency: "USD", shop: "alpineMart", attributes: { color: "green", brand: "AlpinePro", sizes: ["7","8","9"], deliveryDaysMin: 5, deliveryDaysMax: 8, waterproof: false } },
-    { id: "am-gloves-1", title: "SummitGrip Gloves", category: "gloves", price: 89, currency: "USD", shop: "alpineMart", attributes: { color: "red", brand: "AlpinePro", sizes: ["s","m","l"], deliveryDaysMin: 2, deliveryDaysMax: 3, waterproof: true } },
-    { id: "am-gloves-2", title: "FrostLock Gloves", category: "gloves", price: 74, currency: "USD", shop: "alpineMart", attributes: { color: "blue", brand: "ColdTrail", sizes: ["s","m","l","xl"], deliveryDaysMin: 3, deliveryDaysMax: 6, waterproof: true } },
-    { id: "am-base-1", title: "ThermoCore Base Top", category: "baseLayer", price: 79, currency: "USD", shop: "alpineMart", attributes: { color: "black", brand: "GlacierWool", sizes: ["s","m","l"], deliveryDaysMin: 1, deliveryDaysMax: 3, waterproof: false } },
-    { id: "am-base-2", title: "ThermoCore Base Bottom", category: "baseLayer", price: 69, currency: "USD", shop: "alpineMart", attributes: { color: "black", brand: "GlacierWool", sizes: ["s","m","l","xl"], deliveryDaysMin: 1, deliveryDaysMax: 3, waterproof: false } },
-  ],
-  snowBase: [
-    { id: "sb-jacket-1", title: "NorthWind Jacket", category: "jacket", price: 299, currency: "USD", shop: "snowBase", attributes: { color: "black", brand: "IceForge", sizes: ["m","l","xl"], deliveryDaysMin: 4, deliveryDaysMax: 9, waterproof: true } },
-    { id: "sb-jacket-2", title: "DriftGuard Jacket", category: "jacket", price: 249, currency: "USD", shop: "snowBase", attributes: { color: "green", brand: "SnowPulse", sizes: ["s","m","l"], deliveryDaysMin: 3, deliveryDaysMax: 6, waterproof: true } },
-    { id: "sb-pants-1", title: "TrailFlex Pants", category: "pants", price: 189, currency: "USD", shop: "snowBase", attributes: { color: "black", brand: "RidgeWorks", sizes: ["s","m","l"], deliveryDaysMin: 2, deliveryDaysMax: 4, waterproof: true } },
-    { id: "sb-pants-2", title: "DriftGuard Pants", category: "pants", price: 179, currency: "USD", shop: "snowBase", attributes: { color: "blue", brand: "SnowPulse", sizes: ["m","l"], deliveryDaysMin: 4, deliveryDaysMax: 7, waterproof: false } },
-    { id: "sb-boots-1", title: "IceTrack Boots", category: "boots", price: 239, currency: "USD", shop: "snowBase", attributes: { color: "black", brand: "IceForge", sizes: ["8","9","10"], deliveryDaysMin: 2, deliveryDaysMax: 6, waterproof: true } },
-    { id: "sb-boots-2", title: "SummitRise Boots", category: "boots", price: 259, currency: "USD", shop: "snowBase", attributes: { color: "yellow", brand: "PeakWear", sizes: ["7","8","9","10"], deliveryDaysMin: 5, deliveryDaysMax: 8, waterproof: false } },
-    { id: "sb-gloves-1", title: "PolarShield Gloves", category: "gloves", price: 95, currency: "USD", shop: "snowBase", attributes: { color: "black", brand: "RidgeWorks", sizes: ["s","m","l"], deliveryDaysMin: 4, deliveryDaysMax: 6, waterproof: true } },
-    { id: "sb-gloves-2", title: "AlpineLite Gloves", category: "gloves", price: 69, currency: "USD", shop: "snowBase", attributes: { color: "white", brand: "PeakWear", sizes: ["s","m","l","xl"], deliveryDaysMin: 2, deliveryDaysMax: 4, waterproof: false } },
-    { id: "sb-base-1", title: "HeatFlex Base Top", category: "baseLayer", price: 64, currency: "USD", shop: "snowBase", attributes: { color: "black", brand: "PeakWear", sizes: ["s","m","l","xl"], deliveryDaysMin: 1, deliveryDaysMax: 2, waterproof: false } },
-    { id: "sb-base-2", title: "HeatFlex Base Bottom", category: "baseLayer", price: 58, currency: "USD", shop: "snowBase", attributes: { color: "black", brand: "PeakWear", sizes: ["s","m","l","xl"], deliveryDaysMin: 1, deliveryDaysMax: 2, waterproof: false } },
-  ],
-  peakShop: [
-    { id: "ps-jacket-1", title: "StormShield Jacket", category: "jacket", price: 279, currency: "USD", shop: "peakShop", attributes: { color: "black", brand: "NorthPeak", sizes: ["s","m","l","xl"], deliveryDaysMin: 2, deliveryDaysMax: 4, waterproof: true } },
-    { id: "ps-jacket-2", title: "SummitArc Jacket", category: "jacket", price: 269, currency: "USD", shop: "peakShop", attributes: { color: "red", brand: "AlpinePro", sizes: ["s","m","l"], deliveryDaysMin: 3, deliveryDaysMax: 5, waterproof: true } },
-    { id: "ps-pants-1", title: "SummitTrack Pants", category: "pants", price: 205, currency: "USD", shop: "peakShop", attributes: { color: "black", brand: "GlacierWool", sizes: ["s","m","l"], deliveryDaysMin: 3, deliveryDaysMax: 6, waterproof: true } },
-    { id: "ps-pants-2", title: "IceTrack Pants", category: "pants", price: 189, currency: "USD", shop: "peakShop", attributes: { color: "blue", brand: "RidgeWorks", sizes: ["m","l","xl"], deliveryDaysMin: 4, deliveryDaysMax: 7, waterproof: false } },
-    { id: "ps-boots-1", title: "RidgeLock Boots", category: "boots", price: 269, currency: "USD", shop: "peakShop", attributes: { color: "black", brand: "RidgeWorks", sizes: ["8","9","10","11"], deliveryDaysMin: 2, deliveryDaysMax: 5, waterproof: true } },
-    { id: "ps-boots-2", title: "AlpineRise Boots", category: "boots", price: 289, currency: "USD", shop: "peakShop", attributes: { color: "white", brand: "AlpinePro", sizes: ["7","8","9"], deliveryDaysMin: 5, deliveryDaysMax: 9, waterproof: false } },
-    { id: "ps-gloves-1", title: "ColdTrail Gloves", category: "gloves", price: 79, currency: "USD", shop: "peakShop", attributes: { color: "blue", brand: "ColdTrail", sizes: ["s","m","l"], deliveryDaysMin: 2, deliveryDaysMax: 4, waterproof: true } },
-    { id: "ps-gloves-2", title: "SummitGrip Gloves", category: "gloves", price: 92, currency: "USD", shop: "peakShop", attributes: { color: "black", brand: "AlpinePro", sizes: ["s","m","l","xl"], deliveryDaysMin: 3, deliveryDaysMax: 6, waterproof: true } },
-    { id: "ps-base-1", title: "MerinoWarm Base Top", category: "baseLayer", price: 85, currency: "USD", shop: "peakShop", attributes: { color: "black", brand: "NordicMerino", sizes: ["s","m","l","xl"], deliveryDaysMin: 1, deliveryDaysMax: 3, waterproof: false } },
-    { id: "ps-base-2", title: "MerinoWarm Base Bottom", category: "baseLayer", price: 75, currency: "USD", shop: "peakShop", attributes: { color: "black", brand: "NordicMerino", sizes: ["s","m","l","xl"], deliveryDaysMin: 1, deliveryDaysMax: 3, waterproof: false } },
-  ],
+  alpineMart: parseCsvToCatalog(CSV_ALPINE_MART, "alpineMart"),
+  snowBase: parseCsvToCatalog(CSV_SNOW_BASE, "snowBase"),
+  peakShop: parseCsvToCatalog(CSV_PEAK_SHOP, "peakShop"),
 };
+
+console.log("[outfit-pipeline] Catalog loaded:", Object.entries(CATALOG).map(([k, v]) => `${k}=${v.length}`).join(", "));
 
 // ===== SEARCH AGENT =====
 const CATEGORY_ORDER = ["jacket", "pants", "boots", "gloves", "baseLayer"];
@@ -77,7 +392,6 @@ function matchesAttributes(item: SearchItem, attrs?: Record<string, AttributeVal
 function queryShop(shop: ShopId, categories: string[], budget?: { currency: string; max: number }, deadline?: string, attributes?: Record<string, AttributeValue>): SearchItem[] {
   const items = CATALOG[shop] ?? [];
   const deadlineDate = deadline ? parseDate(deadline) : null;
-  // Try with attributes, then without color, then without brand, then bare
   const variants: Record<string, AttributeValue>[] = [attributes ?? {}];
   if (attributes?.color) { const { color: _, ...rest } = attributes; variants.push(rest); }
   if (attributes?.brand) { const { brand: _, ...rest } = attributes; variants.push(rest); }
@@ -120,7 +434,6 @@ function searchAgent(input: { budget?: { currency: string; max: number }; deadli
     allItems.push(...queryShop(shop, CATEGORY_ORDER, input.budget, input.deadline, Object.keys(attrs).length > 0 ? attrs : undefined));
   }
 
-  // Rank and dedupe per category
   const ranked = allItems.sort((a, b) => {
     const sd = scoreItem(b, prefColor, prefBrand, input.budget?.max) - scoreItem(a, prefColor, prefBrand, input.budget?.max);
     return sd !== 0 ? sd : a.price - b.price;
@@ -145,7 +458,6 @@ function assembleOutfits(items: SearchItem[], budget?: { currency: string; max: 
   const missing = REQUIRED_CATEGORIES.find(c => !grouped[c]?.length);
   if (missing) return { outfitOptions: [], infeasibleReason: `Missing category: ${missing}` };
 
-  // Pick top 3 per category, build combinations (limited)
   const topK: Record<string, SearchItem[]> = {};
   for (const cat of REQUIRED_CATEGORIES) {
     topK[cat] = (grouped[cat] ?? []).slice(0, 3);
