@@ -3,7 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { Send, ShoppingBag } from "lucide-react";
 
 export default function ChatPanel() {
-  const { messages, sendMessage } = useApp();
+  const { messages, sendMessage, goHome } = useApp();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -84,10 +84,10 @@ export default function ChatPanel() {
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-        <div className="flex items-center gap-2">
+        <button onClick={goHome} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <ShoppingBag className="w-6 h-6 text-primary" />
           <h1 className="text-lg font-bold text-foreground">BuyBuddy</h1>
-        </div>
+        </button>
       </header>
 
       {/* Messages */}

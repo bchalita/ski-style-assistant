@@ -8,7 +8,7 @@ import { ProductCategory } from "@/types";
 const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "base_bottom", "boots"];
 
 export default function ResultsPage() {
-  const { outfit, confirmedItems, totalPrice, goToCheckout, rankingExplanation } = useApp();
+  const { outfit, confirmedItems, totalPrice, goToCheckout, goHome, rankingExplanation } = useApp();
   const [showExplanation, setShowExplanation] = useState(false);
 
   // Track which categories have items
@@ -27,10 +27,10 @@ export default function ResultsPage() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Nav bar */}
       <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-        <div className="flex items-center gap-2">
+        <button onClick={goHome} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <ShoppingBag className="w-6 h-6 text-primary" />
           <span className="text-lg font-bold text-foreground">BuyBuddy</span>
-        </div>
+        </button>
         <div className="flex items-center gap-2 text-muted-foreground">
           <ShoppingCart className="w-5 h-5" />
           <span className="text-sm font-medium">{confirmedCount}</span>
