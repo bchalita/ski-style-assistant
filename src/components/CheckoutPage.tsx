@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Mountain, ArrowLeft, Check, Home } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Check, Home, Truck } from "lucide-react";
 import { ProductCategory } from "@/types";
 
 const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "boots"];
@@ -42,7 +42,7 @@ export default function CheckoutPage() {
         <button onClick={goBackToResults} className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <Mountain className="w-6 h-6 text-primary" />
+        <ShoppingBag className="w-6 h-6 text-primary" />
         <h1 className="text-lg font-bold text-foreground">Checkout</h1>
       </header>
 
@@ -72,6 +72,15 @@ export default function CheckoutPage() {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
               <span className="text-primary font-medium">Free</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm pt-2">
+              <Truck className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Estimated arrival:</span>
+              <span className="text-foreground font-medium">
+                {new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {" – "}
+                {new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </span>
             </div>
             <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
               <span className="text-foreground">Total</span>

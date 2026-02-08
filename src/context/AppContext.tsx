@@ -42,7 +42,7 @@ const EMPTY_OUTFIT: Record<ProductCategory, Product> = {
 const INITIAL_MESSAGE: ChatMessage = {
   id: "1",
   role: "assistant",
-  text: "Welcome to Alpine Gear! 🏔️ I'll help you find the perfect ski outfit. What are you looking for today?",
+  text: "Hey there! I'm BuyBuddy, your personal shopping assistant. What can I help you find today?",
   quickReplies: ["Full ski outfit", "Just a jacket", "Gloves & accessories"],
 };
 

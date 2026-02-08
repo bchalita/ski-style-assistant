@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useApp } from "@/context/AppContext";
-import { Mountain, ShoppingCart, Snowflake, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingBag, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
 import ItemCard from "./ItemCard";
 import AddItemCard from "./AddItemCard";
 import { ProductCategory } from "@/types";
@@ -28,8 +28,8 @@ export default function ResultsPage() {
       {/* Nav bar */}
       <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border">
         <div className="flex items-center gap-2">
-          <Mountain className="w-6 h-6 text-primary" />
-          <span className="text-lg font-bold text-foreground">Alpine Gear</span>
+          <ShoppingBag className="w-6 h-6 text-primary" />
+          <span className="text-lg font-bold text-foreground">BuyBuddy</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <ShoppingCart className="w-5 h-5" />
@@ -41,7 +41,7 @@ export default function ResultsPage() {
       <div className="px-6 py-6 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Snowflake className="w-5 h-5 text-primary" />
+            <ShoppingBag className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold text-foreground">What we found</h2>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -61,7 +61,7 @@ export default function ResultsPage() {
             onClick={() => setShowExplanation(!showExplanation)}
             className="flex items-center gap-2 text-sm font-medium text-primary hover:opacity-80 transition-opacity"
           >
-            <Snowflake className="w-4 h-4" />
+            <ShoppingBag className="w-4 h-4" />
             Why these items?
             {showExplanation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
