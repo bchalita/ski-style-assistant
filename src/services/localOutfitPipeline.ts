@@ -34,45 +34,24 @@ function toLower(v: unknown): string | undefined { return typeof v === "string" 
 function parseDate(v: string): Date | null { const d = new Date(`${v}T00:00:00Z`); return isNaN(d.getTime()) ? null : d; }
 function addDays(base: string, days: number): Date | null { const d = parseDate(base); if (!d) return null; d.setUTCDate(d.getUTCDate() + days); return d; }
 
-function matchesAttributes(item: SearchItem, attrs?: Record<string, AttributeValue>): boolean {
-  if (!attrs) return true;
-  const ia = item.attributes ?? {};
-  for (const [key, value] of Object.entries(attrs)) {
-    if (value === undefined || value === null) continue;
-    if (key === "size") { const s = toLower(value); const sizes = ia.sizes; const list = Array.isArray(sizes) ? sizes : []; if (!list.some(e => toLower(e) === s)) return false; continue; }
-    if (typeof value === "string") { if (toLower(ia[key]) !== toLower(value)) return false; continue; }
-    if (ia[key] !== value) return false;
-  }
-  return true;
-}
 
-function queryShop(catalog: Record<ShopId, SearchItem[]>, shop: ShopId, categories: string[], budget?: { currency: string; max: number }, deadline?: string, attributes?: Record<string, AttributeValue>): SearchItem[] {
+
+function queryShop(catalog: Record<ShopId, SearchItem[]>, shop: ShopId, categories: string[], budget?: { currency: string; max: number }, deadline?: string): SearchItem[] {
   const items = catalog[shop] ?? [];
   const deadlineDate = deadline ? parseDate(deadline) : null;
-  const variants: Record<string, AttributeValue>[] = [attributes ?? {}];
-  if (attributes?.color) { const { color: _, ...rest } = attributes; variants.push(rest); }
-  if (attributes?.brand) { const { brand: _, ...rest } = attributes; variants.push(rest); }
-  if (attributes?.color && attributes?.brand) { const { color: _c, brand: _b, ...rest } = attributes; variants.push(rest); }
-
-  for (const variant of variants) {
-    const filtered = items.filter(item => {
-      if (categories.length > 0 && !categories.includes(item.category)) return false;
-      if (budget && item.price > budget.max) return false;
-      if (budget && item.currency !== budget.currency) return false;
-      if (deadlineDate) { const dm = Number(item.attributes?.deliveryDaysMax); const arrival = addDays(BASE_DATE, dm); if (!arrival || arrival > deadlineDate) return false; }
-      return matchesAttributes(item, variant);
-    });
-    if (filtered.length > 0) return filtered;
-  }
-  return [];
+  return items.filter(item => {
+    if (categories.length > 0 && !categories.includes(item.category)) return false;
+    if (budget && item.currency !== budget.currency) return false;
+    if (deadlineDate) { const dm = Number(item.attributes?.deliveryDaysMax); const arrival = addDays(BASE_DATE, dm); if (!arrival || arrival > deadlineDate) return false; }
+    return true;
+  });
 }
-
 function scoreItem(item: SearchItem, prefColor?: string, prefBrand?: string, budgetMax?: number): number {
   let score = 0;
   const a = item.attributes ?? {};
   if (prefColor && toLower(a.color) === prefColor) score += 30;
   if (prefBrand && toLower(a.brand) === prefBrand) score += 15;
-  if (a.waterproof === true) score += 20;
+  if (a.waterproof === true || (a.waterproofRating as number) > 0) score += 20;
   if (budgetMax) score += Math.min(10, Math.max(0, 10 * (1 - item.price / budgetMax)));
   return score;
 }
@@ -80,25 +59,35 @@ function scoreItem(item: SearchItem, prefColor?: string, prefBrand?: string, bud
 function searchAgent(catalog: Record<ShopId, SearchItem[]>, input: { budget?: { currency: string; max: number }; deadline?: string; preferences?: Record<string, unknown>; mustHaves?: string[]; niceToHaves?: string[] }): { items: SearchItem[] } {
   const prefColor = toLower(input.preferences?.color);
   const prefBrand = toLower(input.preferences?.brand);
-  const attrs: Record<string, AttributeValue> = {};
-  if (prefColor) attrs.color = prefColor;
-  if (prefBrand) attrs.brand = prefBrand;
-  const prefSize = toLower(input.preferences?.size);
-  if (prefSize) attrs.size = prefSize;
 
+  // Collect ALL items from ALL shops (no color/brand filtering — use scoring instead)
   const allItems: SearchItem[] = [];
   for (const shop of SHOPS) {
-    allItems.push(...queryShop(catalog, shop, CATEGORY_ORDER, input.budget, input.deadline, Object.keys(attrs).length > 0 ? attrs : undefined));
+    allItems.push(...queryShop(catalog, shop, CATEGORY_ORDER, input.budget, input.deadline));
   }
 
-  const ranked = allItems.sort((a, b) => {
+  // Deduplicate across shops: keep cheapest per product+color combo, but track all shops
+  const deduped = new Map<string, SearchItem>();
+  for (const item of allItems) {
+    const a = item.attributes ?? {};
+    const key = `${toLower(item.title)}|${toLower(a.color)}|${toLower(a.style)}`;
+    const existing = deduped.get(key);
+    if (!existing || item.price < existing.price) {
+      deduped.set(key, item);
+    }
+  }
+  const uniqueItems = Array.from(deduped.values());
+
+  // Score and rank — color/brand are preferences, not hard filters
+  const ranked = uniqueItems.sort((a, b) => {
     const sd = scoreItem(b, prefColor, prefBrand, input.budget?.max) - scoreItem(a, prefColor, prefBrand, input.budget?.max);
     return sd !== 0 ? sd : a.price - b.price;
   });
 
+  // Return generous top-N per category to ensure all colors are available
   const items: SearchItem[] = [];
   for (const cat of CATEGORY_ORDER) {
-    items.push(...ranked.filter(i => i.category === cat).slice(0, 10));
+    items.push(...ranked.filter(i => i.category === cat).slice(0, 20));
   }
   return { items };
 }
