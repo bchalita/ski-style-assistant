@@ -36,6 +36,7 @@ const EMPTY_OUTFIT: Record<ProductCategory, Product> = {
   gloves: { id: "", name: "", category: "gloves", price: 0, size: "", color: "", brand: "", description: "", imageUrl: "" },
   baselayer: { id: "", name: "", category: "baselayer", price: 0, size: "", color: "", brand: "", description: "", imageUrl: "" },
   boots: { id: "", name: "", category: "boots", price: 0, size: "", color: "", brand: "", description: "", imageUrl: "" },
+  base_bottom: { id: "", name: "", category: "base_bottom", price: 0, size: "", color: "", brand: "", description: "", imageUrl: "" },
 };
 
 const INITIAL_MESSAGE: ChatMessage = {

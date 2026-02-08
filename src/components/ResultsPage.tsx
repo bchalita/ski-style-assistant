@@ -1,14 +1,24 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useApp } from "@/context/AppContext";
 import { Mountain, ShoppingCart, Snowflake, ChevronDown, ChevronUp } from "lucide-react";
 import ItemCard from "./ItemCard";
+import AddItemCard from "./AddItemCard";
 import { ProductCategory } from "@/types";
 
-const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "boots"];
+const CATEGORIES: ProductCategory[] = ["jacket", "pants", "gloves", "baselayer", "base_bottom", "boots"];
 
 export default function ResultsPage() {
   const { outfit, confirmedItems, totalPrice, goToCheckout, rankingExplanation } = useApp();
   const [showExplanation, setShowExplanation] = useState(false);
+
+  // Track which categories have items
+  const activeCategories = useMemo(() => {
+    const set = new Set<ProductCategory>();
+    for (const cat of CATEGORIES) {
+      if (outfit[cat]?.id) set.add(cat);
+    }
+    return set;
+  }, [outfit]);
 
   const confirmedCount = confirmedItems.size;
   const hasConfirmed = confirmedCount > 0;
@@ -69,6 +79,7 @@ export default function ResultsPage() {
           {CATEGORIES.map((cat) => (
             outfit[cat]?.id ? <ItemCard key={cat} product={outfit[cat]} category={cat} /> : null
           ))}
+          <AddItemCard existingCategories={activeCategories} />
         </div>
       </div>
 

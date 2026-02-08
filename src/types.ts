@@ -1,4 +1,4 @@
-export type ProductCategory = "jacket" | "pants" | "gloves" | "baselayer" | "boots";
+export type ProductCategory = "jacket" | "pants" | "gloves" | "baselayer" | "boots" | "base_bottom";
 
 export interface Product {
   id: string;
@@ -52,6 +52,7 @@ const CATEGORY_MAP: Record<string, ProductCategory> = {
   baselayer: "baselayer",
   baseLayer: "baselayer",
   boots: "boots",
+  base_bottom: "base_bottom",
 };
 
 function categoryImage(category: string, color: string): string {
