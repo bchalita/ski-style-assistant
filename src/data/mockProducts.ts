@@ -73,6 +73,17 @@ export const mockOutfit: Record<ProductCategory, Product> = {
     description: "All-mountain performance boot with GripWalk soles",
     imageUrl: categoryImage("boots", "black"),
   },
+  base_bottom: {
+    id: "bb1",
+    name: "Rho LT Bottom",
+    category: "base_bottom",
+    price: 120,
+    size: "L",
+    color: "Black",
+    brand: "Arc'teryx",
+    description: "Lightweight merino baselayer bottom",
+    imageUrl: categoryImage("base_bottom", "black"),
+  },
 };
 
 export const mockAlternatives: Record<ProductCategory, Product[]> = {
@@ -94,5 +105,8 @@ export const mockAlternatives: Record<ProductCategory, Product[]> = {
   ],
   boots: [
     { id: "bt2", name: "Speedmachine 110", category: "boots", price: 379, size: "10", color: "Black", brand: "Nordica", description: "All-mountain boot", imageUrl: categoryImage("boots", "black") },
+  ],
+  base_bottom: [
+    { id: "bb2", name: "Momentum Baselayer Pants", category: "base_bottom", price: 80, size: "L", color: "Black", brand: "Spyder", description: "Stretch baselayer bottom", imageUrl: categoryImage("base_bottom", "black") },
   ],
 };

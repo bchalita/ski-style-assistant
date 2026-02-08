@@ -284,7 +284,8 @@ RHO LT BOTTOM MEN'S,Arc'teryx,base_bottom,Men,5,120.0,XXL,Red,Baselayer,3,0,2026
 // ===== CSV PARSER =====
 function normalizeCategory(cat: string): string {
   const t = cat.trim().toLowerCase();
-  if (t === "base_top" || t === "base_bottom" || t === "base") return "baseLayer";
+  if (t === "base_top" || t === "base") return "baselayer";
+  if (t === "base_bottom") return "base_bottom";
   return t;
 }
 
@@ -369,7 +370,7 @@ const CATALOG: Record<ShopId, SearchItem[]> = {
 console.log("[outfit-pipeline] Catalog loaded:", Object.entries(CATALOG).map(([k, v]) => `${k}=${v.length}`).join(", "));
 
 // ===== SEARCH AGENT =====
-const CATEGORY_ORDER = ["jacket", "pants", "boots", "gloves", "baseLayer"];
+const CATEGORY_ORDER = ["jacket", "pants", "boots", "gloves", "baselayer", "base_bottom"];
 const SHOPS: ShopId[] = ["alpineMart", "snowBase", "peakShop"];
 const BASE_DATE = "2026-02-01";
 
@@ -447,7 +448,7 @@ function searchAgent(input: { budget?: { currency: string; max: number }; deadli
 }
 
 // ===== ASSEMBLING OUTFITS =====
-const REQUIRED_CATEGORIES = ["jacket", "pants", "boots", "gloves", "baseLayer"];
+const REQUIRED_CATEGORIES = ["jacket", "pants", "boots", "gloves", "baselayer", "base_bottom"];
 
 function assembleOutfits(items: SearchItem[], budget?: { currency: string; max: number }): { outfitOptions: OutfitOption[]; infeasibleReason?: string } {
   if (items.length === 0) return { outfitOptions: [], infeasibleReason: "No items found" };
