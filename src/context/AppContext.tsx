@@ -72,7 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const runOutfitPipeline = useCallback(async (agentOutput: any, prompt: string) => {
     setScreen("loading");
     const loadingStart = Date.now();
-    const MIN_LOADING_MS = 7000; // ensure progress bar completes
+    const MIN_LOADING_MS = 4000; // ensure progress bar completes
     try {
       const { callOutfitPipeline, mapBackendItemToProduct } = await getApi().then(async (api) => {
         const { mapBackendItemToProduct } = await import("@/types");
