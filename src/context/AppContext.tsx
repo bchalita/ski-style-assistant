@@ -18,6 +18,7 @@ interface AppContextValue extends AppState {
   getAlternatives: (category: ProductCategory) => Product[];
   goToCheckout: () => void;
   goBackToResults: () => void;
+  goHome: () => void;
   totalPrice: number;
 }
 
@@ -99,13 +100,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (recommendedOption && products.length > 0) {
         const outfitRecord = { ...EMPTY_OUTFIT };
+        const prefilledCategories = new Set<ProductCategory>();
         for (const { itemId } of recommendedOption.items) {
           const product = products.find((p) => p.id === itemId);
           if (product) {
             outfitRecord[product.category] = product;
+            prefilledCategories.add(product.category);
           }
         }
         setOutfit(outfitRecord);
+        // Prefill cart with all recommended items
+        setConfirmedItems(prefilledCategories);
       }
 
       const topRanked = result.ranked?.find((r) => r.outfitId === recommendedId) ?? result.ranked?.[0];
@@ -199,6 +204,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const goToCheckout = useCallback(() => setScreen("checkout"), []);
   const goBackToResults = useCallback(() => setScreen("results"), []);
+  const goHome = useCallback(() => {
+    setScreen("chat");
+    setMessages([INITIAL_MESSAGE]);
+    setOutfit(EMPTY_OUTFIT);
+    setConfirmedItems(new Set());
+    setAllItems([]);
+    setRankingExplanation("");
+    setPreviousOutput(undefined);
+    setConversationHistory([]);
+  }, []);
 
   const totalPrice = Object.values(outfit).reduce((sum, p) => sum + p.price, 0);
 
@@ -218,6 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getAlternatives,
         goToCheckout,
         goBackToResults,
+        goHome,
         totalPrice,
       }}
     >

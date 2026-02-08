@@ -94,22 +94,21 @@ export default function ItemCard({ product, category }: Props) {
 
         {/* Actions */}
         <div className="px-4 pb-4 flex gap-2">
-          <button
-            onClick={() => toggleConfirmItem(category)}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors ${
-              isConfirmed
-                ? "bg-primary/10 text-primary border border-primary"
-                : "bg-primary text-primary-foreground"
-            }`}
-          >
-            {isConfirmed ? (
-              <>
-                <Check className="w-4 h-4" /> Confirmed
-              </>
-            ) : (
-              "Confirm to Cart"
-            )}
-          </button>
+          {isConfirmed ? (
+            <button
+              onClick={() => toggleConfirmItem(category)}
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-destructive text-destructive hover:bg-destructive/10"
+            >
+              Remove from Cart
+            </button>
+          ) : (
+            <button
+              onClick={() => toggleConfirmItem(category)}
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors bg-primary text-primary-foreground"
+            >
+              Add to Cart
+            </button>
+          )}
           <button
             onClick={() => setShowAlternatives(true)}
             className="w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
