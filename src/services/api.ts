@@ -1,3 +1,7 @@
+import type { BackendItem } from "@/types";
+
+export type { BackendItem };
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -41,19 +45,6 @@ export function callRequestAgent(
   }
 ): Promise<RequestAgentOutput> {
   return post("/api/request-agent", { userRequest, context });
-}
-
-// --- Outfit Pipeline ---
-
-export interface BackendItem {
-  id: string;
-  title: string;
-  category: string;
-  price: number;
-  currency: string;
-  shop: string;
-  url?: string;
-  attributes?: Record<string, string | number | boolean | string[]>;
 }
 
 export interface OutfitOptionBackend {

@@ -33,7 +33,17 @@ export type AppScreen = "chat" | "loading" | "results" | "checkout";
 
 // --- Backend mapping ---
 
-import type { BackendItem } from "@/services/api";
+/** Matches the shape returned by the backend search agent */
+export interface BackendItem {
+  id: string;
+  title: string;
+  category: string;
+  price: number;
+  currency: string;
+  shop: string;
+  url?: string;
+  attributes?: Record<string, string | number | boolean | string[]>;
+}
 
 const CATEGORY_MAP: Record<string, ProductCategory> = {
   jacket: "jacket",

@@ -1,12 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { AppScreen, ChatMessage, Product, ProductCategory, mapBackendItemToProduct } from "@/types";
 import {
   callRequestAgent,
   callOutfitPipeline,
   type RequestAgentOutput,
-  type BackendItem,
-  type RankedOutfit,
-  type OutfitOptionBackend,
 } from "@/services/api";
 
 interface AppState {
